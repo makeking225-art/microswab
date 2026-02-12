@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microswab – Profile Setup</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #3b2bc3, #6b1bbd);
+    min-height: 100vh;
+    color: #fff;
+  }
+  .container {
+    position: relative; /* ✅ Needed for Skip button */
+    width: 100%;
+    max-width: 430px;
+    padding: 1.7rem;
+  }
+  h1 {
+    font-family: 'Pacifico', cursive;
+    font-size: 2rem;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 1.2rem;
+  }
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn .4s ease; }
+  @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+  .profile-wrapper {
+    margin: 20px auto;
+    width: 130px;
+    height: 130px;
+    position: relative;
+  }
+  .profile-picture {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid rgba(255,255,255,0.6);
+  }
+  .profile-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .camera-icon {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffcc00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  }
+  .camera-icon svg { width: 22px; height: 22px; fill: #000; }
+  input[type="file"] { display: none; }
+  .input-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .input-group label {
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+  .input-group input,
+  .input-group textarea {
+    padding: 0.9rem;
+    background: rgba(255,255,255,0.18);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    outline: none;
+    font-size: 1rem;
+  }
+  textarea { resize: none; }
+  .btn {
+    width: 100%;
+    margin-top: 1.2rem;
+    padding: 1rem;
+    background: #ffcc00;
+    color: #111;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .3s ease;
+    font-size: 1rem;
+  }
+  .btn:hover { background: #ffd84d; }
+  .suggestions {
+    background: rgba(255,255,255,0.12);
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 10px;
+    display: none;
+  }
+  .suggestion-item {
+    padding: 8px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.1);
+  }
+  .suggestion-item:hover {
+    background: rgba(255,255,255,0.25);
+  }
+  .selected-tags {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    background: #ffcc00;
+    color: #000;
+    border-radius: 30px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    gap: 8px;
+  }
+  .tag span {
+    cursor: pointer;
+    font-size: 18px;
+  }
+  #loadingAnimation {
+    display: none;
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffcc00;
+  }
+  /* Skip button */
+  #skipProfile {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #skipProfile:hover {
+    background: rgba(255,255,255,0.1);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<button id="skipProfile">Skip</button>
+<h1>Create Your Profile 🎉</h1>
+
+<!-- STEP 1 -->
+<div class="step active" id="step1">
+  <div class="profile-wrapper">
+    <label for="profileUpload" class="profile-picture" id="profilePreview">
+      <svg viewBox="0 0 24 24" width="70" height="70" fill="#fff">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4 20c0-4 8-4 8-4s8 0 8 4v1H4v-1z"></path>
+      </svg>
+    </label>
+    <input type="file" id="profileUpload" accept="image/*">
+    <div class="camera-icon" onclick="document.getElementById('profileUpload').click()">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm9-11h-3.17l-1.83-2H8l-1.83 2H3
+        c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+      </svg>
+    </div>
+  </div>
+  <div class="input-group"><label>First Name</label>
+    <input id="firstName" type="text" placeholder="Enter your first name">
+  </div>
+  <div class="input-group"><label>Second Name</label>
+    <input id="secondName" type="text" placeholder="Enter your second name">
+  </div>
+  <div class="input-group"><label>Bio</label>
+    <textarea id="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+  </div>
+  <button class="btn" onclick="nextStep()">Next</button>
+</div>
+
+<!-- STEP 2 -->
+<div class="step" id="step2">
+  <div class="input-group"><label>Skills You Want to Teach</label>
+    <input id="teachSearch" type="text" placeholder="Search a skill...">
+    <div id="teachSuggestions" class="suggestions"></div>
+    <div id="teachSelected" class="selected-tags"></div>
+  </div>
+  <div class="input-group"><label>Skills You Want to Learn</label>
+    <input id="learnSearch" type="text" placeholder="Search a skill...">
+    <div id="learnSuggestions" class="suggestions"></div>
+    <div id="learnSelected" class="selected-tags"></div>
+  </div>
+  <button class="btn" onclick="saveProfile()">Done</button>
+  <div id="loadingAnimation">Saving profile...</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import {
+  getFirestore, collection, query, orderBy, startAt, endAt,
+  getDocs, setDoc, doc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain: "vs-code-d4d6b.firebaseapp.com",
+  projectId: "vs-code-d4d6b",
+  storageBucket: "vs-code-d4d6b.appspot.com",
+  messagingSenderId: "1012283563694",
+  appId: "1:1012283563694:web:f25cfd82e9f762f617d73f",
+  measurementId: "G-T5VMWZYVM3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ✅ Skip button
+const skipBtn = document.getElementById("skipProfile");
+skipBtn.addEventListener("click", () => {
+  window.location.href = "homepage.html";
+});
+
+// Step Logic
+window.nextStep = () => {
+  document.getElementById("step1").classList.remove("active");
+  document.getElementById("step2").classList.add("active");
+};
+
+// Image preview
+const upload = document.getElementById("profileUpload");
+const preview = document.getElementById("profilePreview");
+let profileFile = null;
+upload.addEventListener("change", () => {
+  profileFile = upload.files[0];
+  if (profileFile) {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(profileFile);
+    preview.innerHTML = "";
+    preview.appendChild(img);
+  }
+});
+
+// Skill search & tag logic
+async function searchSkills(text) {
+  if (!text.trim()) return [];
+  const q = query(collection(db, "skills"), orderBy("name"), startAt(text), endAt(text + "\uf8ff"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data().name);
+}
+function renderSuggestions(box, skills, onSelect) {
+  box.innerHTML = "";
+  if (!skills.length) { box.style.display = "none"; return; }
+  box.style.display = "block";
+  skills.forEach(skill => {
+    const item = document.createElement("div");
+    item.className = "suggestion-item";
+    item.textContent = skill;
+    item.onclick = () => onSelect(skill);
+    box.appendChild(item);
+  });
+}
+function renderTags(container, list, removeFunc) {
+  container.innerHTML = "";
+  list.forEach(skill => {
+    const tag = document.createElement("div");
+    tag.className = "tag";
+    tag.innerHTML = `${skill} <span data-skill="${skill}">×</span>`;
+    tag.querySelector("span").onclick = () => removeFunc(skill);
+    container.appendChild(tag);
+  });
+}
+let teachSelected = [], learnSelected = [];
+const teachSearch = document.getElementById("teachSearch");
+const teachSuggestions = document.getElementById("teachSuggestions");
+const teachSelectedDiv = document.getElementById("teachSelected");
+teachSearch.oninput = async () => {
+  const skills = await searchSkills(teachSearch.value.trim());
+  renderSuggestions(teachSuggestions, skills, skill => {
+    if (!teachSelected.includes(skill)) teachSelected.push(skill);
+    renderTags(teachSelectedDiv, teachSelected, removeTeach);
+    teachSearch.value = "";
+    teachSuggestions.style.display = "none";
+  });
+};
+function removeTeach(skill) {
+  teachSelected = teachSelected.filter(s => s !== skill);
+  renderTags(teachSelectedDiv, teachSelected, removeTeach);
+}
+const learnSearch = document.getElementById("learnSearch");
+const learnSuggestions = document.getElementById("learnSuggestions");
+const learnSelectedDiv = document.getElementById("learnSelected");
+learnSearch.oninput = async () => {
+  const skills = await searchSkills(learnSearch.value.trim());
+  renderSuggestions(learnSuggestions, skills, skill => {
+    if (!learnSelected.includes(skill)) learnSelected.push(skill);
+    renderTags(learnSelectedDiv, learnSelected, removeLearn);
+    learnSearch.value = "";
+    learnSuggestions.style.display = "none";
+  });
+};
+function removeLearn(skill) {
+  learnSelected = learnSelected.filter(s => s !== skill);
+  renderTags(learnSelectedDiv, learnSelected, removeLearn);
+}
+
+// SAVE PROFILE
+window.saveProfile = async () => {
+  const user = auth.currentUser;
+  if (!user) { alert("Not logged in!"); return; }
+
+  const firstName = document.getElementById("firstName").value.trim();
+  const secondName = document.getElementById("secondName").value.trim();
+  const bio = document.getElementById("bio").value.trim();
+
+  if (!firstName || !secondName || !bio) { alert("Fill all fields"); return; }
+
+  document.getElementById("loadingAnimation").style.display = "block";
+
+  let photoURL = "";
+
+  try {
+    if (profileFile) {
+      const formData = new FormData();
+      formData.append("file", profileFile);
+      formData.append("upload_preset", "microswab-profile");
+
+      const res = await fetch("https://api.cloudinary.com/v1_1/dcpa8046h/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      photoURL = data.secure_url;
+    }
+
+        await setDoc(
+          doc(db, "users", user.uid),
+          {
+            firstName,
+            secondName,
+            bio,
+            teachSkills: teachSelected,
+            learnSkills: learnSelected,
+            photoURL,
+            email: user.email,
+            profileCompleted: true,
+            updatedAt: new Date()
+          },
+          { merge: true }
+        );
+    
+        document.getElementById("loadingAnimation").style.display = "none";
+        alert("Profile saved successfully!");
+        window.location.href = "homepage.html";
+      } catch (error) {
+        console.error("Profile save error:", error);
+        alert("Error saving profile: " + error.message);
+        document.getElementById("loadingAnimation").style.display = "none";
+      }
+    };
+    </script>
+    </div>
+    </body>
+    </html>

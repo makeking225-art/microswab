@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teaching Certificate — Microswab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f4f5f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Confetti animation for teachers */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #6a0dad;
+      opacity: 0.8;
+      top: -10px;
+      animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    .certificate-container {
+      background: #fff;
+      width: 90%;
+      max-width: 900px;
+      padding: 50px 40px;
+      border-radius: 25px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+      text-align: center;
+      position: relative;
+      border: 10px solid #6a0dad;
+      z-index: 1;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 38px;
+      margin: 0;
+      color: #6a0dad;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin: 12px 0 30px 0;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .recipient-name {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 20px 0;
+      color: #000;
+    }
+
+    .achievement {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #444;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .tokens-earned {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: #6a0dad;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #555;
+      text-align: center;
+    }
+
+    .btn-home {
+      display: inline-block;
+      background: linear-gradient(135deg, #6a0dad, #8a2be2);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 16px;
+      text-decoration: none;
+      margin-top: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-home:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+    }
+
+    .star {
+      color: #f5c518;
+      font-size: 30px;
+      margin: 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="certificate-container">
+    <h1>🎓 Microswab Teaching Certificate 🎓</h1>
+    <h2>Certificate of Achievement</h2>
+
+    <div class="recipient-name" id="teacherName">Loading…</div>
+
+    <p class="achievement">
+      This certificate is proudly awarded to <strong id="teacherName2">Loading…</strong> for successfully teaching a skill on <strong>Microswab</strong>!  
+      Your guidance, patience, and passion have helped learners grow and achieve their goals.  
+      Every lesson you shared demonstrates your commitment to making education meaningful, impactful, and enjoyable.  
+      Your dedication not only shapes learners’ futures but also strengthens the Microswab community.  
+      Celebrate your accomplishment, and keep inspiring others to learn and grow!
+    </p>
+
+    <div class="tokens-earned">You have earned <strong id="tokensEarned">100 tokens</strong> 🎉</div>
+
+    <div>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+    </div>
+
+    <a href="home.html" class="btn-home">🏠 Back to Microswab</a>
+
+    <div class="footer">
+      Keep teaching, keep inspiring. Your skills are changing lives.  
+      <br>Powered by Microswab • Learn fast • Teach real skills
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+      authDomain:"vs-code-d4d6b.firebaseapp.com",
+      projectId:"vs-code-d4d6b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const teacherNameElem = document.getElementById("teacherName");
+    const teacherNameElem2 = document.getElementById("teacherName2");
+    const tokensElem = document.getElementById("tokensEarned");
+
+    onAuthStateChanged(auth, async user => {
+      if(!user) return location.href = "login.html";
+
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if(snap.exists()){
+        const data = snap.data();
+        const fullName = `${data.firstName || ""} ${data.secondName || ""}`.trim();
+        teacherNameElem.textContent = fullName;
+        teacherNameElem2.textContent = fullName;
+        tokensElem.textContent = `+${data.tokens || 0} tokens`;
+      }
+    });
+
+    // Add confetti
+    for(let i=0;i<150;i++){
+      const confetti = document.createElement('div');
+      confetti.classList.add('confetti');
+      confetti.style.left = Math.random() * window.innerWidth + 'px';
+      confetti.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 60%)`;
+      confetti.style.animationDuration = 2 + Math.random()*3 + 's';
+      confetti.style.width = 6 + Math.random()*6 + 'px';
+      confetti.style.height = confetti.style.width;
+      document.body.appendChild(confetti);
+    }
+  </script>
+</body>
+</html>

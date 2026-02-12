@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group Chat | Microswab</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system;
+  background: #e5ddd5;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== HEADER ===== */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+.header button {
+  border: none;
+  background: none;
+  font-size: 22px;
+  color: #0088cc;
+  cursor: pointer;
+}
+.header img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin-left: 10px;
+}
+.header .title {
+  margin-left: 10px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* ===== MESSAGE LIST ===== */
+#messageList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== MESSAGE GROUP ===== */
+.message-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  max-width: 75%;
+}
+
+.message-group.sent {
+  align-self: flex-end;
+}
+.message-group.received {
+  align-self: flex-start;
+}
+
+/* USERNAME (shown once) */
+.sender-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 3px;
+}
+
+/* MESSAGE BUBBLE */
+.bubble {
+  padding: 8px 12px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  word-wrap: break-word;
+}
+
+/* COLORS */
+.sent .bubble {
+  background: #0088cc;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.received .bubble {
+  background: #fff;
+  color: #111;
+  border-bottom-left-radius: 4px;
+}
+
+/* TIME */
+.time {
+  font-size: 10px;
+  color: #777;
+  margin-top: 2px;
+  text-align: right;
+}
+
+/* ===== INPUT ===== */
+#inputBar {
+  display: flex;
+  padding: 8px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+}
+#messageInput {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 22px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+}
+#sendBtn {
+  margin-left: 8px;
+  padding: 10px 16px;
+  border-radius: 22px;
+  border: none;
+  background: #0088cc;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <button onclick="location.href='group.html'">←</button>
+  <img id="groupImage" src="default-avatar.jpg">
+  <div class="title" id="groupTitle">Group</div>
+</div>
+
+<!-- MESSAGES -->
+<div id="messageList"></div>
+
+<!-- INPUT -->
+<div id="inputBar">
+  <input id="messageInput" placeholder="Message">
+  <button id="sendBtn">Send</button>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain:"vs-code-d4d6b.firebaseapp.com",
+  projectId:"vs-code-d4d6b",
+  storageBucket:"vs-code-d4d6b.appspot.com",
+  messagingSenderId:"1012283563694",
+  appId:"1:1012283563694:web:f25cfd82e9f762f617d73f"
+});
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const params = new URLSearchParams(location.search);
+const groupId = params.get("groupId");
+
+const messageList = document.getElementById("messageList");
+const input = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+
+let lastGroupSender = null;
+let lastGroupEl = null;
+
+/* LOAD GROUP INFO */
+db.collection("groups").doc(groupId).get().then(doc=>{
+  if(doc.exists){
+    groupTitle.textContent = doc.data().name;
+    groupImage.src = doc.data().imageURL || "default-avatar.jpg";
+  }
+});
+
+/* AUTH */
+auth.onAuthStateChanged(user=>{
+  if(!user) return location.href="login.html";
+
+  db.collection("groups").doc(groupId)
+    .collection("messages")
+    .orderBy("createdAt")
+    .onSnapshot(snapshot=>{
+      messageList.innerHTML = "";
+      lastGroupSender = null;
+      lastGroupEl = null;
+
+      snapshot.docs.forEach(doc=>{
+        renderMessage(doc.data(), user.uid);
+      });
+
+      messageList.scrollTop = messageList.scrollHeight;
+    });
+});
+
+/* SEND */
+sendBtn.onclick = async ()=>{
+  const text = input.value.trim();
+  if(!text) return;
+
+  await db.collection("groups").doc(groupId)
+    .collection("messages").add({
+      text,
+      senderUid: auth.currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+  input.value = "";
+};
+
+/* RENDER WITH GROUPING */
+async function renderMessage(msg, myUid){
+  const isMine = msg.senderUid === myUid;
+
+  if(msg.senderUid !== lastGroupSender){
+    const group = document.createElement("div");
+    group.className = "message-group " + (isMine ? "sent" : "received");
+
+    if(!isMine){
+      const userDoc = await db.collection("users").doc(msg.senderUid).get();
+      const name = userDoc.exists
+        ? `${userDoc.data().firstName || ""} ${userDoc.data().secondName || ""}`.trim()
+        : "User";
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "sender-name";
+      nameEl.textContent = name;
+      group.appendChild(nameEl);
+    }
+
+    messageList.appendChild(group);
+    lastGroupEl = group;
+    lastGroupSender = msg.senderUid;
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = msg.text;
+
+  const time = document.createElement("div");
+  time.className = "time";
+  time.textContent = msg.createdAt?.toDate?.().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) || "";
+
+  bubble.appendChild(time);
+  lastGroupEl.appendChild(bubble);
+}
+</script>
+
+</body>
+</html>

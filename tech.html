@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Microswab Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: #fff;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+.header img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+.user-info .name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+  text-decoration: none;
+}
+.user-info .status {
+  font-size: 12px;
+  color: #4caf50;
+  display: flex;
+  align-items: center;
+}
+.user-info .status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* ===== MESSAGES ===== */
+.messages {
+  position: absolute;
+  top: 70px;              /* height of header */
+  bottom: 70px;           /* height of input box */
+  left: 0;
+  right: 0;
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.message {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.sent {
+  background: #1877f2;
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.received {
+  background: #fff;
+  color: #000;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  border: 1px solid #ddd;
+}
+.message img {
+  max-width: 220px;
+  border-radius: 12px;
+  margin-top: 6px;
+  display: block;
+}
+.status-text {
+  font-size: 11px;
+  color: #777;
+  align-self: flex-end;
+  margin: 2px 8px 8px 0;
+}
+
+/* ===== INPUT ===== */
+.input-box {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  gap: 8px;
+  z-index: 1000;
+}
+.input-box input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 22px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+}
+/* ICON BUTTONS */
+.icon-btn,
+#sendBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn,
+#sendBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#sendBtn span { color: #1877f2; }
+/* IMAGE PREVIEW */
+.preview {
+  max-width: 70%;
+  margin: 8px auto 0 14px;
+  position: relative;
+}
+.preview img {
+  width: 100%;
+  border-radius: 12px;
+}
+.preview button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <img id="userPic" src="default-avatar.jpg">
+  <div class="user-info">
+    <a id="userName" class="name">Loading...</a>
+    <div class="status">Active</div>
+  </div>
+</div>
+
+<!-- MESSAGES -->
+<div class="messages" id="messages"></div>
+
+<!-- IMAGE PREVIEW -->
+<div id="previewContainer"></div>
+
+<!-- INPUT -->
+<div class="input-box">
+  <button class="icon-btn" id="imageBtn">
+    <span class="material-icons">image</span>
+  </button>
+  <input type="text" id="messageInput" placeholder="Type a message...">
+  <input type="file" id="imageInput" accept="image/*" hidden>
+  <button id="sendBtn">
+    <span class="material-icons">send</span>
+  </button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, collection, addDoc,
+  query, orderBy, onSnapshot, serverTimestamp, setDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain: "vs-code-d4d6b.firebaseapp.com",
+  projectId: "vs-code-d4d6b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const messagesBox = document.getElementById("messages");
+const input = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const imageBtn = document.getElementById("imageBtn");
+const imageInput = document.getElementById("imageInput");
+const previewContainer = document.getElementById("previewContainer");
+const userPic = document.getElementById("userPic");
+const userName = document.getElementById("userName");
+
+let imageFile = null;
+
+async function init() {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return location.href = "login.html";
+
+    const params = new URLSearchParams(window.location.search);
+    const chatWithUid = params.get("uid");
+    if (!chatWithUid) return alert("Invalid chat user.");
+
+    try {
+      // Load chat user info
+      const userSnap = await getDoc(doc(db, "users", chatWithUid));
+      if (userSnap.exists()) {
+        const d = userSnap.data();
+        userPic.src = d.photoURL || "default-avatar.jpg";
+        userName.textContent = `${d.firstName || ""} ${d.secondName || ""}`;
+        userName.href = `profile.html?uid=${chatWithUid}`;
+      }
+
+      const conversationId = [user.uid, chatWithUid].sort().join("_");
+      const convoRef = doc(db, "conversations", conversationId);
+      const messagesRef = collection(convoRef, "messages");
+
+      // Real-time message listener
+      onSnapshot(query(messagesRef, orderBy("createdAt")), async (snap) => {
+        messagesBox.innerHTML = "";
+        for (const d of snap.docs) {
+          const m = d.data();
+          const bubble = document.createElement("div");
+          bubble.className = "message " + (m.senderId === user.uid ? "sent" : "received");
+          if (m.text) bubble.textContent = m.text;
+          if (m.imageURL) {
+            const img = document.createElement("img");
+            img.src = m.imageURL;
+            bubble.appendChild(img);
+          }
+          messagesBox.appendChild(bubble);
+
+          // Status text
+          if (m.senderId === user.uid) {
+            const s = document.createElement("div");
+            s.className = "status-text";
+            s.textContent = m.seen ? "Seen" : "Sent";
+            messagesBox.appendChild(s);
+          }
+
+          // Mark received as seen
+          if (m.senderId !== user.uid && !m.seen) {
+            const msgRef = doc(db, "conversations", conversationId, "messages", d.id);
+            await updateDoc(msgRef, { seen: true });
+          }
+        }
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+      });
+
+      // Image picker
+      imageBtn.onclick = () => imageInput.click();
+      imageInput.onchange = () => {
+        imageFile = imageInput.files[0];
+        if (!imageFile) return;
+        previewContainer.innerHTML = `
+          <div class="preview">
+            <img src="${URL.createObjectURL(imageFile)}">
+            <button onclick="this.parentElement.remove(); imageFile=null;">×</button>
+          </div>
+        `;
+      };
+
+      // Send message
+      sendBtn.onclick = async () => {
+        if (!input.value.trim() && !imageFile) return;
+
+        let imageURL = "";
+        if (imageFile) {
+          try {
+            const formData = new FormData();
+            formData.append("file", imageFile);
+            formData.append("upload_preset", "microswab-profile");
+            const res = await fetch("https://api.cloudinary.com/v1_1/dcpa8046h/image/upload", {
+              method: "POST",
+              body: formData
+            });
+            const data = await res.json();
+            imageURL = data.secure_url;
+          } catch (err) {
+            console.error("Image upload failed:", err);
+            alert("Image upload failed. Try again.");
+            return;
+          }
+        }
+
+        try {
+          await addDoc(messagesRef, {
+            senderId: user.uid,
+            receiverId: chatWithUid,
+            text: input.value.trim(),
+            imageURL,
+            createdAt: serverTimestamp(),
+            seen: false
+          });
+
+          await setDoc(convoRef, {
+            participants: [user.uid, chatWithUid],
+            lastMessage: input.value.trim() || "Image",
+            lastMessageTime: serverTimestamp(),
+            lastSenderId: user.uid
+          }, { merge: true });
+
+        } catch (err) {
+          console.error(err);
+          alert("Failed to send message. Try again.");
+          return;
+        }
+
+        input.value = "";
+        imageFile = null;
+        previewContainer.innerHTML = "";
+      };
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load chat. Refresh the page.");
+    }
+  });
+}
+
+init();
+</script>
+
+</body>
+</html>

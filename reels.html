@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Microswab — Reels</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+<style>
+  /* Basic mobile-first FB-like styling */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;color:#fff;font-family:Inter,system-ui,Arial;overflow:hidden}
+  .top-bar{position:absolute;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:120}
+  .back-btn{font-size:26px;cursor:pointer}
+  .top-actions{display:flex;gap:10px;align-items:center}
+  .icon-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .icon-btn svg,.icon-btn i{fill:#fff;color:#fff;width:20px;height:20px}
+
+  .reel-wrapper{position:relative;height:100vh;width:100%;overflow:hidden;touch-action:pan-y}
+  .reel{position:absolute;top:0;left:0;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;transition:transform .38s cubic-bezier(.22,.9,.2,1)}
+  .reel video{width:100%;height:100%;object-fit:cover}
+
+  /* left-bottom overlay (poster + title) */
+  .overlay{position:absolute;left:14px;bottom:96px;z-index:110;max-width:64%}
+  .poster-line{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .poster-pic{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.08)}
+  .poster-info{display:flex;flex-direction:column;gap:4px;max-width:100%}
+  .poster-name{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .poster-name {
+  position: relative;
+  z-index: 9999;
+  cursor: pointer;
+  pointer-events: auto;
+  font-weight: 600;
+}
+
+.reel,
+.video-container,
+video {
+  pointer-events: auto;
+}
+  .follow-btn{margin-left:8px;padding:6px 14px;border-radius:22px;border:none;background:#1877f2;color:#fff;font-weight:700;cursor:pointer}
+  .follow-btn.following{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.2)}
+
+  .skill-title{font-size:14px;color:#ddd;max-width:100%;display:block;line-height:1.2;overflow:hidden}
+  .skill-title.clamped{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
+  .see-more{font-size:13px;color:#bbb;margin-top:6px;cursor:pointer}
+
+/* Right actions column - YouTube Shorts / professional style */
+.actions {
+  position: absolute;
+  right: 12px;
+  bottom: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;          /* more space between icons */
+  align-items: center;
+  z-index: 110;
+}
+
+.actions .action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.actions .action i {
+  font-size: 36px;        /* bigger icon like YouTube Shorts */
+  color: #fff;
+  transition: transform 0.12s, color 0.18s;
+}
+
+.actions .action span {
+  font-size: 13px;        /* bold counter */
+  font-weight: 700;
+  color: #fff;
+}
+/* ===== DESKTOP / TABLET FIX ===== */
+@media (min-width: 768px) {
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+  }
+
+  .reel-wrapper {
+    width: 420px;          /* mobile size */
+    height: 90vh;
+    max-height: 800px;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  }
+
+  .reel {
+    height: 100%;
+  }
+
+  .reel video {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+}
+
+.actions .action.like.liked i { color: #0960d1; text-shadow: 0 0 3px rgba(24,119,242,0.8); } /* blue like */
+.actions .action.dislike.liked i { color: #e74c3c; text-shadow: 0 0 3px rgba(231,76,60,0.8); }
+.actions .action.share.success i { transform: scale(1.15); }
+  /* comment row + modal */
+  .comment-row{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:10px;z-index:130}
+  .comment-row img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+  .comment-row input{flex:1;padding:10px 14px;border-radius:24px;border:none;background:rgba(255,255,255,0.06);color:#fff;font-size:14px}
+  .comment-row input::placeholder{color:rgba(255,255,255,.6)}
+  .comments-modal{position:fixed;left:0;right:0;bottom:0;height:68%;background:#0e0e0e;border-top-left-radius:18px;border-top-right-radius:18px;transform:translateY(100%);transition:transform .25s;z-index:200;padding:14px;overflow:auto}
+  .comments-modal.active{transform:translateY(0)}
+  .comments-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .close-comments{cursor:pointer;font-size:20px}
+  .comment-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .comment-item img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+  .comment-box{background:#111;padding:8px 10px;border-radius:12px}
+  .comment-box b{display:block;font-weight:700;margin-bottom:4px;font-size:13px}
+  .no-posts{color:#888;text-align:center;padding:24px}
+  .sound-hint{position:absolute;top:66px;left:12px;color:#ddd;font-size:13px;z-index:110;opacity:.95}
+
+  /* responsive tweaks */
+  @media(min-width:900px){ .poster-info .poster-name{font-size:18px} }
+</style>
+</head>
+<body>
+
+<!-- top -->
+<div class="top-bar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="back-btn" onclick="history.back()">&#8592;</div>
+  </div>
+  <div class="top-actions" aria-hidden="false">
+    <!-- professional profile icon (not Gmail) -->
+    <div class="icon-btn" title="Profile" onclick="window.location.href='profile.html'">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.523 0-10 2.468-10 5.5V22h20v-2.5C22 16.468 17.523 14 12 14z"/></svg>
+    </div>
+    <div class="icon-btn" title="Add" onclick="window.location.href='add.html'">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></svg>
+    </div>
+    <div class="icon-btn" title="Search" onclick="openSearch()">
+      <i class="material-icons" style="font-size:20px">search</i>
+    </div>
+  </div>
+</div>
+
+<!-- double-tap hint -->
+<div id="soundHint" class="sound-hint" style="display:block">Double-tap video to hear sound</div>
+
+<!-- reels -->
+<div id="reelWrapper" class="reel-wrapper" aria-live="polite"></div>
+
+<!-- comment row -->
+<div class="comment-row">
+  <img id="smallProfile" src="https://via.placeholder.com/34" alt="me" />
+  <input id="commentInput" placeholder="Write a comment..." />
+</div>
+
+<!-- comments modal -->
+<div id="commentsModal" class="comments-modal" aria-hidden="true">
+  <div class="comments-header">
+    <div style="font-weight:800">Comments</div>
+    <div id="closeComments" class="close-comments">✕</div>
+  </div>
+  <div id="commentsList"></div>
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <input id="modalCommentInput" placeholder="Write a comment..." style="flex:1;padding:10px;border-radius:10px;background:#111;border:none;color:#fff"/>
+    <button id="modalCancel" style="padding:8px 12px;border-radius:8px;background:#333;border:none;color:#fff">✖️</button>
+    <button id="modalPost" style="padding:8px 12px;border-radius:8px;background:#1877f2;border:none;color:#fff">Post</button>
+  </div>
+</div>
+
+<script type="module">
+/* Firebase v10 modular */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+function getQueryParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+
+const selectedVideoId = getQueryParam("videoId");
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDoc, query, orderBy,
+  onSnapshot, updateDoc, arrayUnion, arrayRemove, addDoc, serverTimestamp, increment
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* ---------- CONFIG - use your project values ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain: "vs-code-d4d6b.firebaseapp.com",
+  projectId: "vs-code-d4d6b",
+  storageBucket: "vs-code-d4d6b.appspot.com",
+  messagingSenderId: "1012283563694",
+  appId: "1:1012283563694:web:f25cfd82e9f762f617d73f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* UI references */
+const reelWrapper = document.getElementById('reelWrapper');
+const smallProfile = document.getElementById('smallProfile');
+const commentInput = document.getElementById('commentInput');
+const commentsModal = document.getElementById('commentsModal');
+const commentsList = document.getElementById('commentsList');
+const closeComments = document.getElementById('closeComments');
+const soundHint = document.getElementById('soundHint');
+const modalCommentInput = document.getElementById('modalCommentInput');
+const modalPost = document.getElementById('modalPost');
+const modalCancel = document.getElementById('modalCancel');
+
+let currentUser = null;
+let reels = []; // { element, docId }
+let currentIndex = 0;
+let soundUnlocked = localStorage.getItem('ms_reels_sound_unlocked') === '1';
+let activeCommentsSkillId = null;
+
+/* Track auth */
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  smallProfile.src = user?.photoURL || 'https://via.placeholder.com/34';
+});
+
+/* safe escape */
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* --- Start real-time stream of reels (skills collection) --- */
+function startReelsStream(){
+  const skillsRef = collection(db, 'skills');
+  const q = query(skillsRef, orderBy('createdAt','desc'));
+  onSnapshot(q, snapshot => {
+    reelWrapper.innerHTML = '';
+    reels = [];
+
+    snapshot.docs.forEach(d => {
+      const data = d.data();
+      if(!data || data.fileType !== 'video' || !data.videoURL) return;
+
+      const el = document.createElement('div');
+      el.className = 'reel';
+      el.dataset.docId = d.id;
+
+      const likesCount = Array.isArray(data.likes) ? data.likes.length : (typeof data.likes === 'number' ? data.likes : 0);
+      const dislikesCount = Array.isArray(data.dislikes) ? data.dislikes.length : (typeof data.dislikes === 'number' ? data.dislikes : 0);
+      const commentsCount = Array.isArray(data.commentsData) ? data.commentsData.length : (typeof data.comments === 'number' ? data.comments : 0);
+      const sharesCount = typeof data.shares === 'number' ? data.shares : 0;
+
+      // video element: Cloudinary URLs work as normal <video src="...">
+      el.innerHTML = `
+        <video src="${escapeHtml(data.videoURL)}" playsinline ${soundUnlocked ? '' : 'muted'} loop preload="metadata"></video>
+
+        <div class="overlay" aria-hidden="false">
+          <div class="poster-line">
+            <img class="poster-pic" src="${escapeHtml(data.posterPhoto || 'https://via.placeholder.com/44')}" alt="poster">
+            <div class="poster-info">
+              <span class="poster-name"
+      data-uid="${escapeHtml(data.posterUserId)}">
+  ${escapeHtml(data.posterName)}
+</span>
+              <div class="skill-title clamped">${escapeHtml(data.title || '')}</div>
+            </div>
+            <button class="follow-btn" data-poster-id="${escapeHtml(data.posterUserId || '')}">Follow</button>
+          </div>
+        </div>
+
+        <div class="actions" role="group" aria-label="video actions">
+          <div class="action like" title="Like" role="button">
+            <i class="material-icons" aria-hidden="true">thumb_up</i>
+            <span>${likesCount}</span>
+          </div>
+          <div class="action dislike" title="Dislike" role="button">
+            <i class="material-icons" aria-hidden="true">thumb_down</i>
+            <span>${dislikesCount}</span>
+          </div>
+          <div class="action comment" title="Comments" role="button">
+            <i class="material-icons" aria-hidden="true">chat_bubble_outline</i>
+            <span>${commentsCount}</span>
+          </div>
+          <div class="action share" title="Share" role="button">
+            <i class="material-icons" aria-hidden="true">share</i>
+            <span>${sharesCount}</span>
+          </div>
+        </div>
+      `;
+
+      reelWrapper.appendChild(el);
+      reels.push({ element: el, docId: d.id });
+      // 🔗 If a specific videoId was requested, jump to it
+if (selectedVideoId && d.id === selectedVideoId) {
+  setTimeout(() => {
+    const index = reels.findIndex(r => r.docId === selectedVideoId);
+    if (index !== -1) {
+      showReel(index);
+    }
+  }, 300);
+}
+
+      // Replace poster name/photo with real user profile from `users` (avoid showing Gmail)
+      (async () => {
+        if(data.posterUserId){
+          try {
+            const udoc = await getDoc(doc(db, 'users', data.posterUserId));
+            if(udoc.exists()){
+              const ud = udoc.data();
+              const pic = el.querySelector('.poster-pic');
+              const nameEl = el.querySelector('.poster-name');
+              pic.src = ud.photoURL || data.posterPhoto || pic.src;
+              const fullName = ((ud.firstName || ud.displayName || '') + (ud.secondName ? ' ' + ud.secondName : '')).trim() || data.posterName || 'User';
+              nameEl.textContent = fullName;
+            }
+          } catch(e){ console.warn('poster lookup failed', e); }
+        }
+      })();
+    });
+
+    // show first reel and wire interactions
+    if(reels.length) showReel(0);
+    wireInteractions();
+    soundHint.style.display = soundUnlocked ? 'none' : (reels.length ? 'block' : 'none');
+  }, err => console.error('reels snapshot err', err));
+}
+
+/* show reel by index */
+function showReel(idx){
+  if(idx < 0) idx = 0;
+  if(idx >= reels.length) idx = reels.length - 1;
+  currentIndex = idx;
+  reels.forEach((r,i)=>{
+    r.element.style.transform = `translateY(${(i-idx)*100}%)`;
+    const v = r.element.querySelector('video');
+    if(i===idx){
+      v.play().catch(()=>{});
+      if(soundUnlocked) v.muted = false;
+    } else {
+      try{ v.pause(); v.currentTime = 0; }catch(e){}
+    }
+  });
+}
+
+/* swipe up/down (mobile) */
+let startY=0, dragging=false;
+reelWrapper.addEventListener('touchstart', e=>{ startY=e.touches[0].clientY; dragging=true; });
+reelWrapper.addEventListener('touchmove', e=>{ if(!dragging) return; const diff=e.touches[0].clientY-startY; const cur=reels[currentIndex]?.element; if(cur) cur.style.transform=`translateY(${diff}px)`; });
+reelWrapper.addEventListener('touchend', e=>{
+  if(!dragging) return;
+  const diff = startY - e.changedTouches[0].clientY;
+  // don't auto-unlock sound on swipe now; we use double-tap (user asked). keep hint visible until double-tap.
+  if(diff>120 && currentIndex<reels.length-1) currentIndex++;
+  if(diff<-120 && currentIndex>0) currentIndex--;
+  showReel(currentIndex);
+  dragging=false;
+});
+
+/* double-tap to unlock sound (mobile & desktop clicks) */
+let lastTap=0;
+function handleDoubleTap(e){
+  const curVideo = reels[currentIndex]?.element.querySelector('video');
+  if(!curVideo) return;
+  const now = Date.now();
+  const delta = now - lastTap;
+  if(delta < 300 && delta > 0){
+    soundUnlocked = true;
+    localStorage.setItem('ms_reels_sound_unlocked','1');
+    curVideo.muted = false;
+    soundHint.style.display = 'none';
+  }
+  lastTap = now;
+}
+reelWrapper.addEventListener('click', handleDoubleTap);
+reelWrapper.addEventListener('touchend', handleDoubleTap);
+
+/* ---- interactions wiring ---- */
+function wireInteractions(){
+  reels.forEach(r=>{
+    const el = r.element;
+    // Open poster profile when name or photo is clicked
+el.querySelectorAll('.poster-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.stopPropagation();
+
+    const uid =
+      link.dataset.uid ||
+      el.querySelector('.follow-btn')?.dataset.posterId;
+
+    if (!uid) return;
+
+    window.location.href = `profile.html?uid=${uid}`;
+  });
+});
+    const docRef = doc(db,'skills',r.docId);
+    const likeBtn = el.querySelector('.action.like');
+    const dislikeBtn = el.querySelector('.action.dislike');
+    const commentBtn = el.querySelector('.action.comment');
+    const shareBtn = el.querySelector('.action.share');
+    const followBtn = el.querySelector('.follow-btn');
+    const titleEl = el.querySelector('.skill-title');
+
+    // title see more: toggle clamped
+    el.querySelectorAll('.skill-title').forEach(t => {
+      t.addEventListener('click', () => t.classList.toggle('clamped'));
+    });
+
+    // Listen for live updates on this skill doc (counts + liked state)
+    onSnapshot(docRef, snap=>{
+      if(!snap.exists()) return;
+      const data = snap.data();
+      // safe counts
+      const likesCount = Array.isArray(data.likes) ? data.likes.length : (typeof data.likes === 'number' ? data.likes : 0);
+      const dislikesCount = Array.isArray(data.dislikes) ? data.dislikes.length : (typeof data.dislikes === 'number' ? data.dislikes : 0);
+      const commentsCount = Array.isArray(data.commentsData) ? data.commentsData.length : (typeof data.comments === 'number' ? data.comments : 0);
+      const sharesCount = typeof data.shares === 'number' ? data.shares : (data.shares || 0);
+
+      likeBtn.querySelector('span').textContent = likesCount;
+      dislikeBtn.querySelector('span').textContent = dislikesCount;
+      commentBtn.querySelector('span').textContent = commentsCount;
+      shareBtn.querySelector('span').textContent = sharesCount;
+
+      // toggle liked/disliked for current user
+      if(currentUser){
+        const liked = Array.isArray(data.likes) && data.likes.includes(currentUser.uid);
+        const disliked = Array.isArray(data.dislikes) && data.dislikes.includes(currentUser.uid);
+        likeBtn.classList.toggle('liked', liked);
+        dislikeBtn.classList.toggle('liked', disliked);
+      } else {
+        likeBtn.classList.remove('liked');
+        dislikeBtn.classList.remove('liked');
+      }
+
+      // reflect follow state (per poster)
+      (async ()=>{
+        const posterId = followBtn.dataset.posterId;
+        if(!posterId) return;
+        try{
+          const pDoc = await getDoc(doc(db,'users',posterId));
+          if(pDoc.exists()){
+            const farr = pDoc.data().followers || [];
+            if(currentUser && Array.isArray(farr) && farr.includes(currentUser.uid)){
+              followBtn.classList.add('following');
+              followBtn.textContent = 'Following';
+            } else {
+              followBtn.classList.remove('following');
+              followBtn.textContent = 'Follow';
+            }
+          }
+        }catch(e){ console.warn('follow state check', e); }
+      })();
+    }, err => console.error('skill doc snapshot err', err));
+
+    // LIKE click (optimistic + real)
+    likeBtn.onclick = async (ev)=>{
+  ev.stopPropagation();
+  if(!currentUser){ alert('Please log in to like posts.'); return; }
+
+  const snap = await getDoc(docRef);
+  if(!snap.exists()) return;
+  let data = snap.data();
+
+  // ensure likes is always an array
+  let likesArr = Array.isArray(data.likes) ? data.likes : [];
+  let dislikesArr = Array.isArray(data.dislikes) ? data.dislikes : [];
+
+  if(likesArr.includes(currentUser.uid)){
+    // remove like
+    await updateDoc(docRef, { likes: arrayRemove(currentUser.uid) });
+  } else {
+    // add like and remove dislike if exists
+    await updateDoc(docRef, { 
+      likes: arrayUnion(currentUser.uid),
+      dislikes: arrayRemove(currentUser.uid)
+    });
+  }
+};
+
+
+    // DISLIKE click
+    dislikeBtn.onclick = async (ev)=>{
+      ev.stopPropagation();
+      if(!currentUser){ alert('Please log in to dislike posts.'); return; }
+      dislikeBtn.classList.toggle('liked');
+      likeBtn.classList.remove('liked');
+      try{
+        const snap = await getDoc(docRef);
+        const data = snap.exists()?snap.data():{};
+        const likesArr = Array.isArray(data.likes)?data.likes:[];
+        const dislikesArr = Array.isArray(data.dislikes)?data.dislikes:[];
+
+        if(dislikesArr.includes(currentUser.uid)){
+          await updateDoc(docRef, { dislikes: arrayRemove(currentUser.uid) });
+        } else {
+          await updateDoc(docRef, { dislikes: arrayUnion(currentUser.uid) });
+          if(likesArr.includes(currentUser.uid)){
+            await updateDoc(docRef, { likes: arrayRemove(currentUser.uid) });
+          }
+        }
+      }catch(e){ console.error('dislike error', e); }
+    };
+
+    // COMMENT -> open modal and load comments
+    commentBtn.onclick = (ev)=>{
+      ev.stopPropagation();
+      commentsModal.classList.add('active');
+      activeCommentsSkillId = r.docId;
+      modalCommentInput.value = '';
+      loadComments(r.docId);
+    };
+    closeComments.onclick = ()=> commentsModal.classList.remove('active');
+
+    // share -> native share or copy; increment on success (best-effort)
+    // SHARE -> always share Microswab homepage
+shareBtn.onclick = async (ev)=>{
+  ev.stopPropagation();
+
+  const shareUrl = "https://microswab.netlify.app";
+  const shareText = "Learn and teach skills on Microswab 🚀";
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Microswab",
+        text: shareText,
+        url: shareUrl
+      });
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Microswab link copied. Share it anywhere!");
+    }
+
+    // ✅ increment shares count
+    await updateDoc(docRef, { shares: increment(1) }).catch(()=>{});
+
+    // visual feedback
+    shareBtn.classList.add("success");
+    setTimeout(() => shareBtn.classList.remove("success"), 600);
+
+  } catch (e) {
+    console.error("share error", e);
+  }
+};
+
+    // Follow -> update poster followers & current user's following
+    followBtn.onclick = async (ev)=>{
+      ev.stopPropagation();
+      if(!currentUser){ alert('Please log in to follow users.'); return; }
+      const posterId = followBtn.dataset.posterId;
+      if(!posterId) return;
+      const posterRef = doc(db,'users',posterId);
+      const meRef = doc(db,'users',currentUser.uid);
+      try{
+        const pSnap = await getDoc(posterRef);
+        const followers = pSnap.exists()? (pSnap.data().followers || []) : [];
+        if(followers.includes(currentUser.uid)){
+          // unfollow
+          await updateDoc(posterRef, { followers: arrayRemove(currentUser.uid) });
+          await updateDoc(meRef, { following: arrayRemove(posterId) }).catch(()=>{});
+          followBtn.classList.remove('following');
+          followBtn.textContent = 'Follow';
+        } else {
+          await updateDoc(posterRef, { followers: arrayUnion(currentUser.uid) });
+          await updateDoc(meRef, { following: arrayUnion(posterId) }).catch(()=>{});
+          followBtn.classList.add('following');
+          followBtn.textContent = 'Following';
+        }
+      }catch(e){ console.error('follow error', e); }
+    };
+  });
+}
+
+/* COMMENTS logic: live subcollection listening + post/cancel */
+function loadComments(skillId){
+  commentsList.innerHTML = '<div class="no-posts">Loading comments…</div>';
+  const commentsCol = collection(db, 'skills', skillId, 'comments');
+  const q = query(commentsCol, orderBy('createdAt','asc'));
+  // attach snapshot
+  const unsub = onSnapshot(q, snap=>{
+    commentsList.innerHTML = '';
+    if(snap.empty){
+      commentsList.innerHTML = '<div class="no-posts">No comments yet — be first!</div>'; return;
+    }
+    snap.docs.forEach(d=>{
+      const c = d.data();
+      const item = document.createElement('div');
+      item.className = 'comment-item';
+      item.innerHTML = `
+        <img src="${escapeHtml(c.photo || 'https://via.placeholder.com/36')}" alt="u" />
+        <div class="comment-box">
+          <b>${escapeHtml(c.name || 'User')}</b>
+          <div>${escapeHtml(c.text || '')}</div>
+        </div>
+      `;
+      commentsList.appendChild(item);
+    });
+  }, err=>{
+    console.error('comments listen', err);
+    commentsList.innerHTML = '<div class="no-posts">Failed to load comments</div>';
+  });
+
+  // return unsub in case needed (we won't call it here)
+}
+
+/* Post comment from modal */
+modalPost.onclick = async ()=>{
+  if(!currentUser){ alert('Please log in to comment.'); return; }
+  const text = modalCommentInput.value.trim();
+  if(!text || !activeCommentsSkillId) return;
+  try{
+    const commentsCol = collection(db, 'skills', activeCommentsSkillId, 'comments');
+    await addDoc(commentsCol, {
+      userId: currentUser.uid,
+      name: currentUser.displayName || (currentUser.email || 'User'),
+      photo: currentUser.photoURL || '',
+      text,
+      createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db, 'skills', activeCommentsSkillId), { comments: increment(1) }).catch(()=>{});
+    modalCommentInput.value = '';
+    // comments listener will update list
+  }catch(e){ console.error('post comment error', e); alert('Failed to post comment') }
+};
+
+/* Cancel button in modal */
+modalCancel.onclick = ()=> { modalCommentInput.value = ''; commentsModal.classList.remove('active'); };
+
+/* Quick comment inline with Enter (bottom row) */
+commentInput.addEventListener('keypress', async (e)=>{
+  if(e.key !== 'Enter') return;
+  if(!currentUser){ alert('Please log in to comment.'); return;}
+  const text = commentInput.value.trim();
+  if(!text) return;
+  const active = reels[currentIndex];
+  if(!active) return;
+  try{
+    const commentsCol = collection(db, 'skills', active.docId, 'comments');
+    await addDoc(commentsCol, {
+      userId: currentUser.uid,
+      name: currentUser.displayName || (currentUser.email || 'User'),
+      photo: currentUser.photoURL || '',
+      text,
+      createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db,'skills',active.docId), { comments: increment(1) }).catch(()=>{});
+    commentInput.value = '';
+  }catch(e){ console.error('inline comment error', e); }
+});
+
+/* Simple search UI (prompt) — fetches small user list then matches */
+async function openSearch(){
+  const q = prompt('Search users by name (type part of a name):');
+  if(!q) return;
+  try{
+    const usersRef = collection(db, 'users');
+    // This helper fetches a snapshot once
+    const snap = await new Promise((resolve,reject)=>{
+      const unsub = onSnapshot(usersRef, s=>{ unsub(); resolve(s); }, err=>{ unsub(); reject(err); });
+    });
+    const matches = snap.docs.map(d=>({ id:d.id, ...d.data() })).filter(u=> ((u.displayName||'') + ' ' + (u.firstName||'')).toLowerCase().includes(q.toLowerCase()));
+    if(matches.length===0) return alert('No users found');
+    const names = matches.map(m=>m.displayName || ((m.firstName||'') + ' ' + (m.secondName||''))).join('\n');
+    const pick = prompt(`Matches:\n${names}\n\nType the exact name to open profile (or cancel)`);
+    if(!pick) return;
+    const chosen = matches.find(m => (m.displayName || '').toLowerCase() === pick.toLowerCase() || ((m.firstName||'') + ' ' + (m.secondName||'')).toLowerCase() === pick.toLowerCase());
+    if(chosen) window.location.href = `profile.html?uid=${chosen.id}`;
+  }catch(e){ console.error('search error', e); alert('Search failed'); }
+}
+
+/* start */
+startReelsStream();
+document.addEventListener("click", (e) => {
+  const name = e.target.closest(".poster-name");
+  if (!name) return;
+
+  e.stopPropagation();
+  e.preventDefault();
+
+  const uid = name.dataset.uid;
+  if (!uid) return;
+
+  window.location.href = `profile.html?uid=${uid}`;
+});
+</script>
+</body>
+</html>

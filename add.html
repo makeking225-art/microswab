@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Skill Post — Microswab</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+  <style>
+  :root {
+    --bg-main: #0f0f0f;
+    --bg-card: #151515;
+    --bg-input: #111;
+    --border-soft: #262626;
+    --text-muted: #9a9a9a;
+    --accent: #00ff88;
+    --accent-dark: #00cc66;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 10px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-main);
+    color: #fff;
+    min-height: 100vh;
+  }
+
+  /* ===== Top Bar ===== */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: rgba(20, 20, 20, 0.95);
+    border-bottom: 1px solid var(--border-soft);
+    backdrop-filter: blur(8px);
+  }
+
+  .top-bar h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  #nextBtn {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    opacity: 0.4;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  #nextBtn.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ===== Main Sections ===== */
+  .stage-one,
+  .editor-area {
+    padding: 20px 16px 28px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ===== Upload Card ===== */
+  .image-box {
+    background: var(--bg-card);
+    border: 1px dashed var(--border-soft);
+    border-radius: var(--radius-lg);
+    height: 260px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .image-box:hover {
+    border-color: #333;
+  }
+
+  .image-box h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .green {
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #previewImage,
+  #previewVideo {
+    display: none;
+    width: 100%;
+    height: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    border-radius: var(--radius-lg);
+  }
+
+  /* ===== Video Upload Button ===== */
+  .video-upload-btn {
+    display: block;
+    text-align: center;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border-soft);
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+
+  .video-upload-btn span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ===== Editor Area ===== */
+  .editor-area {
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===== Inputs ===== */
+  .input-box {
+    margin-bottom: 16px;
+  }
+
+  .input-box label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #e5e5e5;
+  }
+
+  .input-box input,
+  .input-box textarea,
+  .input-box select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-soft);
+    color: #fff;
+    font-size: 14px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-box input:focus,
+  .input-box textarea:focus,
+  .input-box select:focus {
+    border-color: var(--accent);
+  }
+
+  textarea {
+    resize: none;
+    min-height: 100px;
+  }
+
+  /* ===== Action Button ===== */
+  .finish-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    text-align: center;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .finish-btn:active {
+    transform: scale(0.98);
+  }
+
+  .finish-btn:hover {
+    background: var(--accent-dark);
+  }
+
+  /* ===== Upload Progress ===== */
+  .uploading-text {
+    text-align: center;
+    color: var(--accent);
+    margin-top: 14px;
+    display: none;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .progress-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    justify-content: center;
+    color: var(--accent);
+  }
+
+  .progress-bar {
+    width: 180px;
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+  }
+
+  .progress-bar > i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    transition: width 0.25s ease;
+  }
+
+  .spinner {
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ===== Desktop polish ===== */
+  @media (min-width: 768px) {
+    .stage-one,
+    .editor-area {
+      padding-top: 28px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span onclick="history.back()" style="font-size:18px; cursor:pointer;">←</span>
+  <h2>New Post</h2>
+  <span id="nextBtn">Next</span>
+</div>
+
+<div class="stage-one" id="stageOne">
+  <div class="image-box">
+    <h3>Put Your Skill Image</h3>
+    <label for="imageInput" class="green">Choose 📷</label>
+    <input type="file" id="imageInput" accept="image/*" hidden>
+    <img id="previewImage" alt="preview image">
+  </div>
+  <label class="video-upload-btn"><span>Post Video 🎥</span>
+    <input type="file" id="videoInput" accept="video/*" hidden>
+  </label>
+  <video id="previewVideo" controls muted playsinline></video>
+</div>
+
+<div class="editor-area" id="editorSection">
+  <div class="input-box">
+    <label>Skill Title</label>
+    <input type="text" id="skillTitle" placeholder="e.g. Learn Graphic Design">
+  </div>
+  <div class="input-box">
+    <label>Skill Bio</label>
+    <textarea id="skillBio" placeholder="Short description about the skill..."></textarea>
+  </div>
+  <div class="input-box" id="courseBox" style="display:none;">
+  <label>Write Full Course</label>
+  <textarea
+    id="courseText"
+    placeholder="Write your full course here...
+• Use short paragraphs
+• Leave space between ideas
+• Use simple words
+• Highlight important points"
+    style="height:180px; line-height:1.6;"
+  ></textarea>
+</div>
+  <div class="input-box">
+    <label>Privacy</label>
+    <select id="privacy">
+      <option value="public">Public</option>
+      <option value="private">Private</option>
+    </select>
+  </div>
+  <div class="finish-btn" id="uploadBtn">Upload Skill</div>
+  <div class="uploading-text" id="uploadingText">Uploading skill...</div>
+  <div class="progress-row" id="progressRow" style="display:none">
+    <div class="spinner" id="spinner"></div>
+    <div class="progress-bar"><i id="progressFill"></i></div>
+    <div id="progressPercent">0%</div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain: "vs-code-d4d6b.firebaseapp.com",
+  projectId: "vs-code-d4d6b",
+  storageBucket: "vs-code-d4d6b.appspot.com",
+  messagingSenderId: "1012283563694",
+  appId: "1:1012283563694:web:f25cfd82e9f762f617d73f"
+};
+
+const cloudName = "dcpa8046h";
+const uploadPreset = "microswab-profile";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const nextBtn = document.getElementById("nextBtn");
+const imageInput = document.getElementById("imageInput");
+const videoInput = document.getElementById("videoInput");
+const previewImage = document.getElementById("previewImage");
+const previewVideo = document.getElementById("previewVideo");
+const stageOne = document.getElementById("stageOne");
+const editorSection = document.getElementById("editorSection");
+const uploadBtn = document.getElementById("uploadBtn");
+const uploadingText = document.getElementById("uploadingText");
+const progressRow = document.getElementById("progressRow");
+const progressFill = document.getElementById("progressFill");
+const progressPercent = document.getElementById("progressPercent");
+
+let fileSelected = null;
+let fileType = null;
+let currentUser = null;
+
+onAuthStateChanged(auth, (user) => { currentUser = user || null; });
+
+// File preview
+imageInput.addEventListener("change", () => {
+  if (imageInput.files[0]) {
+    fileSelected = imageInput.files[0];
+    fileType = "image";
+    previewImage.src = URL.createObjectURL(fileSelected);
+    previewImage.style.display = "block";
+    previewVideo.style.display = "none";
+
+    // Show course field
+    document.getElementById("courseBox").style.display = "block";
+
+    nextBtn.classList.add("active");
+  }
+});
+
+videoInput.addEventListener("change", () => {
+  if (videoInput.files[0]) {
+    fileSelected = videoInput.files[0];
+    fileType = "video";
+    previewVideo.src = URL.createObjectURL(fileSelected);
+    previewVideo.style.display = "block";
+    previewImage.style.display = "none";
+
+    // Hide course field for video posts
+    document.getElementById("courseBox").style.display = "none";
+
+    nextBtn.classList.add("active");
+  }
+});
+
+// Next button
+nextBtn.addEventListener("click", () => {
+  if (!fileSelected) return;
+  stageOne.style.display = "none";
+  editorSection.style.display = "block";
+  document.getElementById("skillTitle").focus();
+});
+
+// Get user profile
+async function getUserProfile(userId){
+  const docRef = doc(db, "users", userId);
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()){
+    return docSnap.data();
+  } else {
+    return { displayName: currentUser.email, photoURL: "https://via.placeholder.com/100" };
+  }
+}
+
+// Upload skill
+uploadBtn.addEventListener("click", async () => {
+  const title = document.getElementById("skillTitle").value.trim();
+  const bio = document.getElementById("skillBio").value.trim();
+  const courseText = fileType === "image" ? document.getElementById("courseText").value.trim() : "";
+  const privacy = document.getElementById("privacy").value;
+
+ if(!title || !bio || !fileSelected || (fileType==="image" && !courseText)){
+  alert("Please fill all required fields!");
+  return;
+}
+
+  if(!currentUser){
+    alert("Please log in to upload.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  uploadingText.style.display = "block";
+  progressRow.style.display = "flex";
+  uploadBtn.style.pointerEvents = "none";
+  uploadBtn.style.opacity = "0.6";
+
+  try {
+    // Upload to Cloudinary
+    const form = new FormData();
+    form.append("file", fileSelected);
+    form.append("upload_preset", uploadPreset);
+
+    progressFill.style.width = `10%`;
+    progressPercent.textContent = `10%`;
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+      method: "POST",
+      body: form
+    });
+    const cloudRes = await res.json();
+    const fileURL = cloudRes.secure_url;
+
+    progressFill.style.width = `100%`;
+    progressPercent.textContent = `100%`;
+
+    const userProfile = await getUserProfile(currentUser.uid);
+    const posterName = userProfile.displayName || currentUser.email;
+    const posterPhoto = userProfile.photoURL || "https://via.placeholder.com/100";
+
+    const skillDoc = {
+  title,
+  bio,
+  privacy,
+  fileType,
+  posterName,
+  posterPhoto,
+  posterUserId: currentUser.uid,
+  likes: 0,
+  likesArray: [],
+  views: 0,
+  viewsArray: [],
+  comments: [],
+  shares: 0,
+  postType: fileType === "video" ? "video" : "skill",
+  // Save full course only for skill posts
+  fullCourse: fileType === "image" ? courseText : "",
+  createdAt: serverTimestamp()
+};
+
+    if(fileType === "video") skillDoc.videoURL = fileURL;
+    else skillDoc.fileURL = fileURL;
+
+    const docRef = await addDoc(collection(db, "skills"), skillDoc);
+
+// 🔔 Add notification to global collection
+await addDoc(collection(db, "allNotifications"), {
+  message: "A teacher just posted a new skill — go check it out!",
+  skillId: docRef.id,  // optional, if you want to link to the skill later
+  createdAt: serverTimestamp(),
+  read: false,
+  posterUserId: currentUser.uid
+});
+uploadingText.textContent = "Upload complete — redirecting…";
+
+// Redirect logic
+setTimeout(() => {
+  if(fileType === "video") {
+    window.location.href = "reels.html";
+  } else {
+    window.location.href = `course.html?skillId=${docRef.id}`;
+  }
+}, 650);
+
+  } catch(err){
+    console.error("Upload error:", err);
+    alert("Upload failed. Check console.");
+    uploadingText.style.display="none";
+    progressRow.style.display="none";
+    uploadBtn.style.pointerEvents="auto";
+    uploadBtn.style.opacity="1";
+  }
+});
+</script>
+</body>
+</html>

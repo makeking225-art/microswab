@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Challenge — Microswab</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: #f6f7fb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .challenge-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .badge {
+      display: inline-block;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      font-size: 15px;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .teacher-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f9fafb;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+    }
+
+    .teacher-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .teacher-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .teacher-info p {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .cta-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .cta-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="challenge-card">
+
+    <span class="badge">🔥 Today’s Challenge</span>
+
+    <h1 class="title">Learn Coding in 5 Minutes</h1>
+
+    <p class="description">
+      Spend just 5 minutes today learning a simple coding concept.
+      Small daily progress compounds into real skills over time.
+    </p>
+
+    <div class="teacher-box">
+      <div class="teacher-avatar">TC</div>
+      <div class="teacher-info">
+        <h4>Teacher Course</h4>
+        <p>Short, beginner-friendly lesson</p>
+      </div>
+    </div>
+
+    <!-- ✅ START CHALLENGE BUTTON -->
+    <button id="startChallenge" type="button">
+  Start Challenge
+</button>
+
+    <div class="footer-note">
+      Complete today’s challenge to earn streak points
+    </div>
+
+  </div>
+
+  <script>
+  const teacherCourseId = "1QcyeS0M9uRwv0C3fhoR";
+
+  document
+    .getElementById("startChallenge")
+    .addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      window.location.assign(
+        `teacherchat.html?teacherId=${teacherCourseId}`
+      );
+    });
+</script>
+</body>
+</html>

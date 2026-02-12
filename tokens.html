@@ -1,0 +1,502 @@
+
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>Microswab Tokens</title>  
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined|Material+Icons" rel="stylesheet">  
+<style>  
+body {  
+  margin:0;  
+  font-family: 'Arial', sans-serif;  
+  background: #f4f5f7;  
+  color: #333;  
+  padding-bottom: 60px;     
+}  
+.topbar {  
+  display:flex;  
+  justify-content:space-between;  
+  align-items:center;  
+  padding:16px 20px;  
+  background:#fff;  
+  border-bottom:1px solid #ddd;  
+  position:sticky;  
+  top:0;  
+  z-index:1000;  
+}  
+.topbar .logo {  
+  font-family:'Brush Script MT', cursive;  
+  font-size:28px;  
+  font-weight:bold;  
+  color:#6a0dad;  
+}  
+.token-card {  
+  background: linear-gradient(135deg, #8a2be2, #6a0dad);  
+  color: #fff;  
+  margin:20px;  
+  padding:24px 20px;  
+  border-radius:16px;  
+  box-shadow:0 8px 20px rgba(0,0,0,0.15);  
+  display:flex;  
+  align-items:center;  
+  justify-content:space-between;  
+  transition: transform 0.3s ease;  
+}  
+.token-card:hover { transform: translateY(-4px); }  
+.token-card .balance { font-size:36px; font-weight:bold; }  
+.token-card .icon { font-size:48px; }  
+.progress-section { margin:20px; background:#fff; border-radius:16px; padding:20px; box-shadow:0 6px 18px rgba(0,0,0,0.08); }  
+.progress-section h3 { margin-bottom:16px; color:#333; }  
+.progress-label { display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px; color:#555; }  
+.progress-bar { width:100%; height:22px; background:#f0f0f0; border-radius:12px; overflow:hidden; margin-bottom:16px; }  
+.progress-bar-inner { height:100%; background: linear-gradient(90deg, #8a2be2, #6a0dad); width:0%; transition: width 0.6s ease; border-radius:12px; }  
+.stats-container { display:flex; gap:16px; margin:0 20px 20px 20px; }  
+.stats-card { flex:1; background:#fff; padding:20px; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,0.08); text-align:center; transition: transform 0.3s ease; }  
+.stats-card:hover { transform: translateY(-4px); }  
+.stats-card h2 { margin:0; font-size:28px; color:#6a0dad; }  
+.stats-card p { margin:6px 0 0 0; font-size:14px; color:#555; font-weight:bold; }  
+.buttons-container { display:flex; flex-direction:column; gap:12px; margin:20px; }  
+.buttons-container button {  
+  background:#6a0dad; color:white; border:none; padding:14px 0; border-radius:12px;  
+  font-size:16px; font-weight:bold; cursor:pointer; transition: background 0.3s ease, transform 0.2s ease;  
+}  
+.buttons-container button:hover { background:#4b0082; transform: translateY(-2px); }  
+.history-section { margin:20px; background:#fff; border-radius:16px; padding:20px; box-shadow:0 6px 18px rgba(0,0,0,0.08); }  
+.history-section h3 { margin-bottom:16px; color:#333; }  
+.history-item { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eee; font-size:14px; transition: background 0.2s; }  
+.history-item:hover { background:#f9f9f9; border-radius:8px; }  
+.history-item:last-child { border-bottom:none; }  
+.history-item .desc { color:#555; }  
+.history-item .amount { font-weight:bold; color:#6a0dad; }  
+.bottom-nav { position:fixed; bottom:0; width:100%; background:white; display:flex; justify-content:space-around; align-items:center; padding:8px 0; box-shadow:0 -3px 6px rgba(0,0,0,0.1); z-index:1000; }  
+.bottom-nav a { display:flex; flex-direction:column; align-items:center; text-decoration:none; color:#555; font-size:11px; flex:1; }  
+.bottom-nav a span { font-size:24px; }  
+.bottom-nav a:hover { color:#6a0dad; }  
+.bottom-nav a.active { color:#6a0dad; }  
+.plus-button { font-size:28px !important; color:#6a0dad; }  
+.profile-pic { width:28px; height:28px; border-radius:50%; object-fit:cover; }  
+.overlay {  
+  position:fixed; top:0; left:0; width:100%; height:100%;  
+  background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:2000;  
+}  
+.overlay .popup {  
+  background:#fff; padding:30px 20px; border-radius:16px; text-align:center; width:90%; max-width:400px;  
+}  
+.overlay button { margin-top:20px; } 
+.motivation-message {
+  background: linear-gradient(135deg, #8a2be2, #6a0dad);
+  color: #fff;
+  margin: 20px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  font-weight: 500;
+} 
+.daily-reward-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #111, #1c1c1c);
+  color: #fff;
+  padding: 30px 25px;
+  width: 85%;
+  max-width: 360px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.daily-reward-card h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.daily-reward-card p {
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.daily-reward-card button {
+  margin-top: 18px;
+  padding: 12px 20px;
+  font-size: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #00e676;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>  
+</head>  
+<body>  <div class="topbar"><div class="logo">Microswab Tokens</div></div>  <div class="token-card">  
+  <div>  
+    <button id="certificateBtn" style="
+  display:none;
+  background:#6a0dad;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:10px;
+  font-weight:bold;
+  font-size:14px;
+  cursor:pointer;
+">
+  🎓 Certificate
+</button>
+    <div style="font-size:14px; opacity:0.8;">Token Balance</div>  
+    <div class="balance" id="tokenBalance">0</div>  
+  </div>  
+  <span class="material-icons icon">diamond</span>  
+</div> 
+<div class="motivation-message" id="motivationMessage">
+  Keep learning and teaching on Microswab! Earn tokens for every skill you master or share. Learners: reach max progress to unlock monetization. Teachers: hit 5,000 tokens to start turning your skills into real rewards. Keep growing and earning your efforts today pay off tomorrow!”
+</div>
+<!-- Daily Reward -->
+<!-- Daily Reward -->
+<div id="dailyRewardCard" class="daily-reward-card" style="display:none;">
+  <h2>🎉 Daily Reward</h2>
+  <p>
+    Thanks for opening <strong>Microswab</strong> today.<br>
+    You’ve earned <strong>+15 tokens</strong>.
+  </p>
+  <button id="claimDailyBtn">Claim Reward</button>
+</div>
+ <div class="progress-section">  
+  <h3>Learning & Teaching Progress</h3>  
+  <div class="progress-label"><span>Learning</span><span id="learningPercent">0%</span></div>  
+  <div class="progress-bar"><div class="progress-bar-inner" id="learningProgress"></div></div>  
+  <div class="progress-label"><span>Teaching</span><span id="teachingPercent">0%</span></div>  
+  <div class="progress-bar"><div class="progress-bar-inner" id="teachingProgress"></div></div>  
+</div>  <div class="stats-container">  
+  <div class="stats-card"><h2 id="skillsLearned">0</h2><p>Skills Learned</p></div>  
+  <div class="stats-card"><h2 id="skillsTaught">0</h2><p>Skills Taught</p></div>  
+</div>  <div class="buttons-container">  
+  <button id="buyTokens">Buy Tokens</button>  
+  <button id="earnTokens">Earn Tokens</button>  
+  <button id="sendTokens">Send Tokens</button>   
+</div>  <div class="history-section">  
+  <h3>Token History</h3>  
+  <div class="history-item"><span class="desc">Joined Microswab</span><span class="amount">+30</span></div>  
+</div>  <div class="bottom-nav">  
+  <a href="index.html"><span class="material-icons-outlined">home</span>Home</a>  
+  <a href="messages.html"><span class="material-icons-outlined">chat_bubble_outline</span>Messages</a>  
+  <a href="add.html"><span class="material-icons plus-button">add</span>Add</a>  
+  <a href="tokens.html" class="active"><span class="material-icons-outlined">diamond</span>Tokens</a>  
+  <a href="profile.html"><span class="material-icons-outlined">person</span>Profile</a>  
+</div>  <div class="overlay" id="overlay">  
+  <div class="popup" id="popupContent">  
+    <div id="popupMessage"></div>  
+ <button id="closePopupBtn">Close</button>
+  </div>  
+</div>  
+ <script type="module">  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";  
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";  
+import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";  
+  
+const firebaseConfig = {  
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",  
+  authDomain: "vs-code-d4d6b.firebaseapp.com",  
+  projectId: "vs-code-d4d6b",  
+  storageBucket: "vs-code-d4d6b.appspot.com",  
+  messagingSenderId: "1012283563694",  
+  appId: "1:1012283563694:web:f25cfd82e9f762f617d73f"  
+};  
+const app = initializeApp(firebaseConfig);  
+const db = getFirestore(app);  
+const auth = getAuth(app); 
+const DAILY_REWARD = 15;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const dailyRewardBox = document.getElementById("dailyRewardCard");
+const claimDailyBtn = document.getElementById("claimDailyBtn");
+
+auth.onAuthStateChanged(async user => {
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const certBtn = document.getElementById("certificateBtn");
+
+if (data.hasLearningCertificate && data.hasTeachingCertificate) {
+  certBtn.style.display = "block";
+  certBtn.onclick = () => {
+    window.location.href = "certificate.html"; // default
+  };
+} else if (data.hasLearningCertificate) {
+  certBtn.style.display = "block";
+  certBtn.onclick = () => window.location.href = "certificate.html";
+} else if (data.hasTeachingCertificate) {
+  certBtn.style.display = "block";
+  certBtn.onclick = () => window.location.href = "teachceti.html";
+}
+  const lastClaimTime = data.lastDailyClaimTime || 0;
+  const now = Date.now();
+
+  // ✅ REAL 24-HOUR CHECK
+  if (now - lastClaimTime >= DAY_MS) {
+    dailyRewardBox.style.display = "block";
+
+    claimDailyBtn.onclick = async () => {
+  claimDailyBtn.disabled = true;
+  claimDailyBtn.textContent = "Claiming... ⏳";
+
+  await updateDoc(userRef, {
+    tokens: increment(DAILY_REWARD),
+    lastDailyClaimTime: Date.now()
+  });
+
+  claimDailyBtn.textContent = "Claimed ✅";
+  loadTokens();
+
+  setTimeout(() => {
+    dailyRewardBox.style.display = "none";
+    claimDailyBtn.disabled = false;
+    claimDailyBtn.textContent = "Claim Reward";
+  }, 2000); // 2 seconds instead of 800ms
+};
+  } else {
+    const timeLeft = lastClaimTime + DAY_MS - now;
+    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    dailyRewardBox.innerHTML = `
+      <h2>Daily Reward</h2>
+      <p>You can claim your daily reward in ${hours}h ${minutes}m.</p>
+    `;
+  }
+});
+  
+const overlay = document.getElementById("overlay");  
+const popupMessage = document.getElementById("popupMessage");
+document.getElementById("overlay").addEventListener("click", (e) => {
+  if (e.target.id === "closePopupBtn") {
+    closeOverlay();
+  }
+});  
+const tokenBalanceElem = document.getElementById("tokenBalance");  
+  
+function showOverlay(message){  
+  popupMessage.textContent = message;  
+  overlay.style.display = "flex";  
+}  
+function closeOverlay(){  
+  overlay.style.display = "none";  
+}  
+
+// ===== NEW FUNCTION: SHOW LEARNING/TEACHING CERTIFICATE POPUP =====
+function showCertificatePopup(type){
+    const title = type === "learning" ? "Learning Achievement" : "Teaching Achievement";
+    const message = type === "learning"
+        ? "👏 Congratulations! You have successfully completed a skill and earned 100 tokens. You can now view your Learning Certificate."
+        : "👏 Congratulations! You have successfully taught a skill and earned 100 tokens. You can now view your Teaching Certificate.";
+
+    overlay.style.display = "flex";
+    overlay.innerHTML = `
+        <div class="popup">
+            <h3 style="color:#6a0dad; margin-bottom:16px;">${title}</h3>
+            <p style="font-size:15px; color:#333; line-height:1.5;">${message}</p>
+            <button id="viewCertificateBtn" style="background:#6a0dad;color:white;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-top:16px;width:100%;">See Certificate</button>
+            <button id="closePopupBtn" style="background:#ddd;color:#333;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-top:12px;width:100%;">Close</button>
+        </div>
+    `;
+
+    document.getElementById("viewCertificateBtn").addEventListener("click", async ()=> {
+  const userRef = doc(db, "users", currentUserId);
+
+  if (type === "learning") {
+    await updateDoc(userRef, { hasLearningCertificate: true });
+    window.location.href = "certificate.html";
+  } else {
+    await updateDoc(userRef, { hasTeachingCertificate: true });
+    window.location.href = "teachceti.html";
+  }
+});
+
+    document.getElementById("closePopupBtn").addEventListener("click", closeOverlay);
+}
+
+// ===== END NEW FUNCTION =====
+
+let currentUserId = null;  
+auth.onAuthStateChanged(async user => {  
+  if (!user) return;  
+  currentUserId = user.uid;  
+
+  const userRef = doc(db, "users", currentUserId);  
+  const snap = await getDoc(userRef);  
+
+  // Create user document if it doesn't exist  
+  if (!snap.exists()) {  
+    await setDoc(userRef, {  
+      tokens: 0,  
+      aiPaidUntil: 0,  
+      createdAt: Date.now(),
+      learningProgress: 0,
+      teachingProgress: 0,
+      skillsLearned: 0,
+      skillsTaught: 0,
+      learningCompleted: false,
+      teachingCompleted: false
+    });  
+  }  
+  loadTokens();  
+});  
+
+async function loadTokens(){  
+  if(!currentUserId) return;  
+  const docRef = doc(db,"users",currentUserId);  
+  const docSnap = await getDoc(docRef);  
+  if(docSnap.exists()){  
+    const data = docSnap.data();  
+    tokenBalanceElem.textContent = data.tokens || 0;  
+
+    // Show one-time token notification
+    if(data.newTokenNotification){  
+      showOverlay(data.newTokenNotification);  
+      await updateDoc(doc(db,"users",currentUserId), { newTokenNotification: "" });  
+    }  
+
+    // Update progress bars
+    document.getElementById("learningPercent").textContent = (data.learningProgress || 5) + "%";  
+    document.getElementById("learningProgress").style.width = (data.learningProgress || 5) + "%";  
+    document.getElementById("teachingPercent").textContent = (data.teachingProgress || 5) + "%";  
+    document.getElementById("teachingProgress").style.width = (data.teachingProgress || 5) + "%";  
+
+    // Update skills learned & taught
+    document.getElementById("skillsLearned").textContent = data.skillsLearned || 0;
+    document.getElementById("skillsTaught").textContent = data.skillsTaught || 0;
+
+   // ===== LOOPING LEARNING PROGRESS =====
+if((data.learningProgress || 0) >= 100){
+    const extra = (data.learningProgress || 0) - 100; // carry over progress above 100%
+    await updateDoc(doc(db,"users",currentUserId), {
+        tokens: increment(100),
+        skillsLearned: increment(1),
+        learningProgress: extra,
+        learningCompleted: false // reset flag so next cycle works
+    });
+    showCertificatePopup("learning");
+}
+
+// ===== LOOPING TEACHING PROGRESS =====
+if((data.teachingProgress || 0) >= 100){
+    const extra = (data.teachingProgress || 0) - 100;
+    await updateDoc(doc(db,"users",currentUserId), {
+        tokens: increment(100),
+        skillsTaught: increment(1),
+        teachingProgress: extra,
+        teachingCompleted: false
+    });
+    showCertificatePopup("teaching");
+}
+    // ===== END NEW CODE =====
+  }  
+}  
+
+// Button placeholders  
+document.getElementById("buyTokens").addEventListener("click", ()=> showOverlay("Buy tokens coming soon..."));  
+document.getElementById("sendTokens").addEventListener("click", ()=> showOverlay("Send tokens coming soon..."));  
+
+// ===== KEEP ALL EXISTING EARN TOKENS LOGIC UNCHANGED =====
+document.getElementById("earnTokens").addEventListener("click", async ()=>{  
+  overlay.style.display = "flex";  
+  overlay.innerHTML = `  
+    <div class="popup">  
+      <h3>Earn Tokens</h3>  
+      <div style="margin:20px 0;">  
+        <button id="inviteBtn" style="background:#6a0dad;color:white;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-bottom:10px;width:100%;">Invite 3 Friends (+30 tokens)</button>  
+        <button id="postVideoBtn" style="background:#6a0dad;color:white;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-bottom:10px;width:100%;">Post Skill Video (+5 tokens)</button>  
+        <button id="longAdsBtn" style="background:#6a0dad;color:white;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-bottom:10px;width:100%;">Watch Long Ads (+5 tokens)</button>  
+        <button id="closeEarnBtn" style="background:#ddd;color:#333;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;width:100%;">Close</button>  
+      </div>  
+    </div>  
+  `;  
+  
+  document.getElementById("closeEarnBtn").addEventListener("click", closeOverlay);  
+
+  // KEEP THE REST OF YOUR EARN TOKENS LOGIC AS-IS...
+  document.getElementById("inviteBtn").addEventListener("click", async ()=>{  
+    const referralLink = "microswab.netlify.app=" + currentUserId;  
+    overlay.innerHTML = `  
+      <div class="popup">  
+        <h3>Share Microswab 🚀</h3>  
+        <p>Share with your friends and earn tokens!</p>  
+        <button id="shareBtn" style="background:#6a0dad;color:white;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-top:10px;width:100%;">Share Now</button>  
+        <button id="backBtn" style="background:#ddd;color:#333;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin-top:10px;width:100%;">Back</button>  
+      </div>  
+    `;  
+  
+    document.getElementById("backBtn").addEventListener("click", ()=> loadTokensPopup());  
+    document.getElementById("shareBtn").addEventListener("click", async ()=>{  
+      if(!navigator.share){ alert("Native share not supported"); return; }  
+      try{  
+        await navigator.share({  
+          title:"Join me on Microswab 🚀",  
+          text:"Learn and teach skills with me on Microswab!",  
+          url:referralLink  
+        });  
+        const userRef = doc(db,"users",currentUserId);  
+        await updateDoc(userRef,{ tokens: increment(30) });  
+        loadTokens();  
+        loadTokensPopup();  
+      }catch(err){ console.log(err); }  
+    });  
+  });  
+
+  document.getElementById("postVideoBtn").addEventListener("click", async ()=>{  
+    const userRef = doc(db,"users",currentUserId);  
+    const docSnap = await getDoc(userRef);  
+    let data = docSnap.exists() ? docSnap.data() : {};  
+    const lastPost = data.lastPostTime || 0;  
+    const now = Date.now();  
+    if(now - lastPost > 10*3600*1000 || !lastPost){  
+      await updateDoc(userRef,{ tokens: increment(5), lastPostTime: now });  
+      loadTokens();  
+      showOverlay("You earned +5 tokens for posting a skill!");  
+      setTimeout(()=> closeOverlay(),2000);  
+    }else{  
+      showOverlay("You can post for tokens again after 10 hours!");  
+      setTimeout(()=> closeOverlay(),2000);  
+    }  
+    window.location.href = "add.html";  
+  });  
+
+  document.getElementById("longAdsBtn").addEventListener("click", async ()=>{  
+    overlay.innerHTML = `  
+      <div class="popup">  
+        <h3>Watching Ads</h3>  
+        <p id="adCountdown">20</p>  
+      </div>  
+    `;  
+    let count = 20;  
+    const interval = setInterval(()=>{  
+      count--;  
+      document.getElementById("adCountdown").textContent = count;  
+      if(count<=0){  
+        clearInterval(interval);  
+        const userRef = doc(db,"users",currentUserId);  
+        updateDoc(userRef,{ tokens: increment(5) });  
+        loadTokens();  
+        showOverlay("You earned +5 tokens!");  
+        setTimeout(()=> closeOverlay(),2000);  
+      }  
+    },1000);  
+  });  
+
+  function loadTokensPopup(){  
+    document.getElementById("earnTokens").click();  
+  }  
+});  
+</script>
+ </body>  
+</html>

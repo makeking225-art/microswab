@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microswab Quiz</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+<style>
+body { font-family: 'Inter', sans-serif; margin:0; padding:0; background:#f0f2f5; }
+.header { background:#fff; padding:14px 18px; font-weight:bold; font-size:20px; border-bottom:1px solid #ddd; position:sticky; top:0; }
+.container { padding:20px; }
+select, button { padding:10px; border-radius:8px; border:1px solid #ccc; outline:none; }
+button { background:#0084ff; color:white; border:none; cursor:pointer; margin-top:10px; }
+.question-card { background:#fff; padding:16px; margin-top:20px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.options button { display:block; margin-top:10px; width:100%; }
+.correct { background:#4caf50 !important; }
+.wrong { background:#f44336 !important; }
+.feedback { margin-top:10px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div class="header">Microswab Quiz</div>
+<div class="container">
+  <div id="skillSelectDiv">
+    <select id="skillSelect">
+      <option value="">Select a skill</option>
+      <option value="Coding">Coding</option>
+      <option value="Marketing">Marketing</option>
+      <option value="Cybersecurity">Cybersecurity</option>
+      <option value="Math">Math</option>
+      <option value="English">English</option>
+      <option value="Physics">Physics</option>
+      <option value="Chemistry">Chemistry</option>
+      <option value="Finance">Finance</option>
+      <option value="GraphicDesign">Graphic Design</option>
+      <option value="AI">Artificial Intelligence</option>
+      <option value="WebDevelopment">Web Development</option>
+      <option value="MobileDevelopment">Mobile Development</option>
+      <option value="DataScience">Data Science</option>
+      <option value="UIUX">UI/UX Design</option>
+      <option value="Entrepreneurship">Entrepreneurship</option>
+      <option value="StockTrading">Stock Trading</option>
+      <option value="Photography">Photography</option>
+      <option value="VideoEditing">Video Editing</option>
+      <option value="MusicProduction">Music Production</option>
+      <option value="Cooking">Cooking</option>
+    </select>
+    <button id="startQuizBtn">Start Quiz</button>
+  </div>
+
+  <div id="quizDiv" style="display:none;">
+    <div id="questionCard" class="question-card">
+      <div id="questionText"></div>
+      <div class="options" id="optionsDiv"></div>
+      <div class="feedback" id="feedback"></div>
+      <button id="nextQuestionBtn" style="display:none;">Next Question</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain: "vs-code-d4d6b.firebaseapp.com",
+  projectId: "vs-code-d4d6b",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// DOM
+const skillSelectDiv = document.getElementById("skillSelectDiv");
+const skillSelect = document.getElementById("skillSelect");
+const startQuizBtn = document.getElementById("startQuizBtn");
+const quizDiv = document.getElementById("quizDiv");
+const questionText = document.getElementById("questionText");
+const optionsDiv = document.getElementById("optionsDiv");
+const feedback = document.getElementById("feedback");
+const nextQuestionBtn = document.getElementById("nextQuestionBtn");
+
+let questions = [];
+let currentIndex = 0;
+let currentUserRef;
+
+// ===== Full Questions for 20 Skills =====
+const skillsData = {
+  Coding: [
+    { question: "What does coding mean?", options: ["To create apps and websites", "To build house", "To explore"], correct: 0, reward: 3 },
+    { question: "Which language is used to style websites?", options: ["Python", "CSS", "Java"], correct: 1, reward: 3 },
+    { question: "Which language is used for Android apps?", options: ["Kotlin", "Ruby", "PHP"], correct: 0, reward: 3 }
+  ],
+  Marketing: [
+    { question: "What is marketing?", options: ["Selling products", "Promoting products", "Buying products"], correct: 1, reward: 3 },
+    { question: "Which is digital marketing?", options: ["Social Media Ads", "TV Ads", "Billboards"], correct: 0, reward: 3 },
+    { question: "SEO helps with?", options: ["Ranking websites", "Buying products", "Designing logos"], correct: 0, reward: 3 }
+  ],
+  Cybersecurity: [
+    { question: "Cybersecurity protects?", options: ["Data", "Houses", "Cars"], correct: 0, reward: 3 },
+    { question: "Phishing is?", options: ["A hacking attempt", "Fishing in river", "Cooking method"], correct: 0, reward: 3 },
+    { question: "Strong password should include?", options: ["12345", "Letters, numbers, symbols", "Name only"], correct: 1, reward: 3 }
+  ],
+  Math: [
+    { question: "What is 5+7?", options: ["12", "10", "15"], correct: 0, reward: 3 },
+    { question: "What is the square root of 49?", options: ["6", "7", "8"], correct: 1, reward: 3 },
+    { question: "What is 9*9?", options: ["81", "72", "91"], correct: 0, reward: 3 }
+  ],
+  English: [
+    { question: "Which is a noun?", options: ["Run", "Apple", "Quickly"], correct: 1, reward: 3 },
+    { question: "Which is a verb?", options: ["Jump", "Happy", "Blue"], correct: 0, reward: 3 },
+    { question: "Which is an adjective?", options: ["Slowly", "Tall", "Sing"], correct: 1, reward: 3 }
+  ],
+  Physics: [
+    { question: "What is force?", options: ["Mass x Acceleration", "Velocity / Time", "Distance x Time"], correct: 0, reward: 3 },
+    { question: "Unit of energy?", options: ["Joule", "Watt", "Newton"], correct: 0, reward: 3 },
+    { question: "Speed of light?", options: ["3x10^8 m/s", "3x10^6 m/s", "3x10^5 m/s"], correct: 0, reward: 3 }
+  ],
+  Chemistry: [
+    { question: "H2O is?", options: ["Water", "Oxygen", "Hydrogen"], correct: 0, reward: 3 },
+    { question: "NaCl is?", options: ["Salt", "Sugar", "Acid"], correct: 0, reward: 3 },
+    { question: "pH of water?", options: ["7", "1", "14"], correct: 0, reward: 3 }
+  ],
+  Finance: [
+    { question: "ROI stands for?", options: ["Return on Investment", "Rate of Income", "Revenue of Interest"], correct: 0, reward: 3 },
+    { question: "What is an asset?", options: ["Liability", "Resource of value", "Expense"], correct: 1, reward: 3 },
+    { question: "Stocks represent?", options: ["Company ownership", "Debt", "Salary"], correct: 0, reward: 3 }
+  ],
+  GraphicDesign: [
+    { question: "Photoshop is used for?", options: ["Designing graphics", "Coding apps", "Editing videos"], correct: 0, reward: 3 },
+    { question: "Vector graphics are?", options: ["Scalable images", "Photos", "Videos"], correct: 0, reward: 3 },
+    { question: "UI design tool?", options: ["Figma", "Word", "Excel"], correct: 0, reward: 3 }
+  ],
+  AI: [
+    { question: "AI stands for?", options: ["Artificial Intelligence", "Automatic Input", "Advanced Internet"], correct: 0, reward: 3 },
+    { question: "AI can?", options: ["Solve problems", "Cook food", "Drive cars manually"], correct: 0, reward: 3 },
+    { question: "Machine Learning is part of?", options: ["AI", "Physics", "Math"], correct: 0, reward: 3 }
+  ],
+  WebDevelopment: [
+    { question: "HTML is for?", options: ["Web structure", "Styles", "Backend logic"], correct: 0, reward: 3 },
+    { question: "CSS is for?", options: ["Web styling", "Database", "JavaScript"], correct: 0, reward: 3 },
+    { question: "JS is for?", options: ["Web interactivity", "Cooking", "Writing documents"], correct: 0, reward: 3 }
+  ],
+  MobileDevelopment: [
+    { question: "Android is?", options: ["Mobile OS", "Programming language", "App"], correct: 0, reward: 3 },
+    { question: "iOS is?", options: ["Mobile OS", "Website", "Database"], correct: 0, reward: 3 },
+    { question: "Kotlin is used for?", options: ["Android apps", "iOS apps", "Websites"], correct: 0, reward: 3 }
+  ],
+  DataScience: [
+    { question: "Data Science involves?", options: ["Analyzing data", "Cooking food", "Driving cars"], correct: 0, reward: 3 },
+    { question: "Python is used for?", options: ["Data analysis", "Building houses", "Singing"], correct: 0, reward: 3 },
+    { question: "Machine Learning is?", options: ["AI technique", "Math formula", "Cooking method"], correct: 0, reward: 3 }
+  ],
+  UIUX: [
+    { question: "UX stands for?", options: ["User Experience", "User Exercise", "User Excel"], correct: 0, reward: 3 },
+    { question: "UI stands for?", options: ["User Interface", "User Internet", "User Input"], correct: 0, reward: 3 },
+    { question: "Good UX improves?", options: ["User satisfaction", "Website speed", "Stock price"], correct: 0, reward: 3 }
+  ],
+  Entrepreneurship: [
+    { question: "Entrepreneurship is?", options: ["Starting a business", "Trading stocks", "Cooking food"], correct: 0, reward: 3 },
+    { question: "Angel investors provide?", options: ["Funding", "Housing", "Schooling"], correct: 0, reward: 3 },
+    { question: "Business plan is for?", options: ["Strategy", "Cooking", "Exercise"], correct: 0, reward: 3 }
+  ],
+  StockTrading: [
+    { question: "Stocks are?", options: ["Company shares", "Bonds", "Cash"], correct: 0, reward: 3 },
+    { question: "Bull market means?", options: ["Prices rising", "Prices falling", "Stable prices"], correct: 0, reward: 3 },
+    { question: "Dividends are?", options: ["Profit shared", "Debt", "Loss"], correct: 0, reward: 3 }
+  ],
+  Photography: [
+    { question: "Aperture controls?", options: ["Light entry", "Camera brand", "Lens type"], correct: 0, reward: 3 },
+    { question: "Shutter speed affects?", options: ["Motion blur", "Camera color", "Memory size"], correct: 0, reward: 3 },
+    { question: "ISO affects?", options: ["Sensor sensitivity", "Lens size", "Battery"], correct: 0, reward: 3 }
+  ],
+  VideoEditing: [
+    { question: "Editing software?", options: ["Premiere Pro", "Word", "Excel"], correct: 0, reward: 3 },
+    { question: "Timeline is?", options: ["Sequence of clips", "Cooking recipe", "Website"], correct: 0, reward: 3 },
+    { question: "Render means?", options: ["Export final video", "Draw graphics", "Write code"], correct: 0, reward: 3 }
+  ],
+  MusicProduction: [
+    { question: "DAW stands for?", options: ["Digital Audio Workstation", "Digital App Workflow", "Drive Audio Work"], correct: 0, reward: 3 },
+    { question: "MIDI is for?", options: ["Music data", "Video data", "Photo data"], correct: 0, reward: 3 },
+    { question: "EQ is used to?", options: ["Adjust frequencies", "Add lyrics", "Record vocals"], correct: 0, reward: 3 }
+  ],
+  Cooking: [
+    { question: "Boiling means?", options: ["Cooking in water", "Frying", "Baking"], correct: 0, reward: 3 },
+    { question: "Baking is done in?", options: ["Oven", "Stove", "Microwave"], correct: 0, reward: 3 },
+    { question: "Grilling is done on?", options: ["Grill", "Oven", "Microwave"], correct: 0, reward: 3 }
+  ]
+};
+
+// ===== Auth =====
+onAuthStateChanged(auth, user => {
+  if (!user) return location.href = "login.html";
+  currentUserRef = doc(db, "users", user.uid);
+});
+
+// ===== Start Quiz =====
+startQuizBtn.onclick = () => {
+  const skillName = skillSelect.value;
+  if (!skillName) return alert("Select a skill!");
+
+  questions = skillsData[skillName];
+  if (!questions || questions.length === 0) return alert("No questions for this skill.");
+
+  skillSelectDiv.style.display = "none";
+  quizDiv.style.display = "block";
+  currentIndex = 0;
+  showQuestion();
+};
+
+// ===== Show Question =====
+function showQuestion() {
+  feedback.textContent = "";
+  nextQuestionBtn.style.display = "none";
+  const q = questions[currentIndex];
+  questionText.textContent = q.question;
+
+  optionsDiv.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+    btn.onclick = () => checkAnswer(i);
+    optionsDiv.appendChild(btn);
+  });
+}
+
+// ===== Check Answer =====
+async function checkAnswer(selected) {
+  const q = questions[currentIndex];
+  const buttons = optionsDiv.querySelectorAll("button");
+
+  buttons.forEach((b, i) => {
+    if (i === q.correct) b.classList.add("correct");
+    if (i === selected && selected !== q.correct) b.classList.add("wrong");
+    b.disabled = true;
+  });
+
+  if (selected === q.correct) {
+    feedback.textContent = `🎉 Correct! +${q.reward} tokens`;
+    const userSnap = await getDoc(currentUserRef);
+    const tokens = (userSnap.data().tokens || 0) + q.reward;
+    await updateDoc(currentUserRef, { tokens });
+  } else {
+    feedback.textContent = `❌ Wrong! Correct answer: ${String.fromCharCode(65+q.correct)}. ${q.options[q.correct]}`;
+  }
+
+  nextQuestionBtn.style.display = "block";
+}
+
+// ===== Next Question =====
+nextQuestionBtn.onclick = () => {
+  currentIndex++;
+  if (currentIndex >= questions.length) {
+    alert("🎉 Quiz completed!");
+    quizDiv.style.display = "none";
+    skillSelectDiv.style.display = "block";
+  } else {
+    showQuestion();
+  }
+};
+</script>
+
+</body>
+</html>

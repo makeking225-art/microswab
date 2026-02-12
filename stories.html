@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Story - Microswab</title>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+
+<style>
+body {
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background:#000;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  align-items:center;
+}
+
+header {
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 20px;
+  background:rgba(0,0,0,0.85);
+}
+header h1 { font-size:20px; color:white; margin:0; }
+header button {
+  padding:6px 14px;
+  background:#6a0dad;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.story-preview {
+  margin:40px auto 20px auto;
+  width:260px;
+  height:430px;
+  border-radius:30px;
+  overflow:hidden;
+  background:#111;
+  border:2px solid #6a0dad;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.story-preview img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.choose-btn {
+  display:flex;
+  justify-content:center;
+  margin-bottom:20px;
+}
+.choose-btn input { display:none; }
+.choose-btn label {
+  padding:12px 24px;
+  background:#0095f6;
+  color:white;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#nextSection {
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  width:90%;
+  max-width:320px;
+}
+
+#storyTitle {
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  margin-bottom:10px;
+  font-size:16px;
+  outline:none;
+}
+
+#doneBtn {
+  padding:12px 24px;
+  background:#6a0dad;
+  color:white;
+  border:none;
+  border-radius:20px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#postingOverlay {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-size:18px;
+  color:#00ff99;
+  z-index:999;
+}
+.spinner {
+  border:4px solid #333;
+  border-top:4px solid #00ff99;
+  border-radius:50%;
+  width:55px;
+  height:55px;
+  animation:spin 1s linear infinite;
+  margin-bottom:15px;
+}
+@keyframes spin { 100% { transform:rotate(360deg); } }
+</style>
+</head>
+
+<body>
+
+<header>
+  <button onclick="window.location.href='home.html'">Back</button>
+  <h1>Add Story</h1>
+  <div></div>
+</header>
+
+<div class="story-preview" id="storyPreview">
+  <span>No image selected</span>
+</div>
+
+<div class="choose-btn">
+  <input type="file" id="storyInput" accept="image/*">
+  <label for="storyInput" id="chooseLabel">Choose Image</label>
+</div>
+
+<div id="nextSection">
+  <input type="text" id="storyTitle" placeholder="Say something...">
+  <button id="doneBtn">Post Story</button>
+</div>
+
+<div id="postingOverlay">
+  <div class="spinner"></div>
+  Posting your story...
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain:"vs-code-d4d6b.firebaseapp.com",
+  projectId:"vs-code-d4d6b",
+  storageBucket:"vs-code-d4d6b.appspot.com",
+  messagingSenderId:"1012283563694",
+  appId:"1:1012283563694:web:f25cfd82e9f762f617d73f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// CLOUDINARY DETAILS
+const CLOUD_NAME = "dcpa8046h";
+const UPLOAD_PRESET = "microswab-profile";
+
+let selectedFile = null;
+
+const storyInput = document.getElementById("storyInput");
+const preview = document.getElementById("storyPreview");
+const nextSection = document.getElementById("nextSection");
+const storyTitle = document.getElementById("storyTitle");
+const doneBtn = document.getElementById("doneBtn");
+const postingOverlay = document.getElementById("postingOverlay");
+
+// load image preview
+storyInput.addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) {
+    selectedFile = e.target.files[0];
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      preview.innerHTML = `<img src="${ev.target.result}" />`;
+      nextSection.style.display = "flex";
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+});
+
+// Post story
+onAuthStateChanged(auth, (user) => {
+  if (!user) return;
+
+  doneBtn.addEventListener("click", async () => {
+    if (!selectedFile) {
+      alert("Select an image first");
+      return;
+    }
+
+    postingOverlay.style.display = "flex";
+
+    try {
+      // Upload to Cloudinary
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("upload_preset", UPLOAD_PRESET);
+
+      const cloudinaryURL =
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+      const cloudinaryRes = await fetch(cloudinaryURL, {
+        method: "POST",
+        body: formData
+      });
+
+      const uploaded = await cloudinaryRes.json();
+      const imageURL = uploaded.secure_url;
+
+      // Save story to Firestore
+      await addDoc(collection(db, "stories"), {
+        userId: user.uid,
+        imageURL,
+        title: storyTitle.value,
+        createdAt: serverTimestamp()
+      });
+
+      postingOverlay.style.display = "none";
+
+      alert("Story posted!");
+      window.location.href = "home.html";
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to post story. Check console.");
+      postingOverlay.style.display = "none";
+    }
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Courses — Microswab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+
+<style>
+/* ===== GLOBAL ===== */
+body, html {
+  margin:0; padding:0; height:100%;
+  font-family:Arial,sans-serif;
+  background:#f0f2f5;
+}
+.header {
+  background:#fff;
+  padding:14px 18px;
+  font-weight:bold;
+  font-size:20px;
+  border-bottom:1px solid #ddd;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.search-bar {
+  display:flex;
+  padding:8px 18px;
+  background:#f0f2f5;
+  border-bottom:1px solid #ddd;
+}
+.search-bar input {
+  flex:1;
+  padding:8px 12px;
+  border-radius:20px;
+  border:1px solid #ccc;
+  outline:none;
+}
+.search-bar button {
+  margin-left:8px;
+  padding:8px 12px;
+  border-radius:20px;
+  border:none;
+  background:#0084ff;
+  color:white;
+}
+#myCoursesGrid {
+  padding:12px 18px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.course-card {
+  background:#fff;
+  border-radius:12px;
+  padding:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  cursor:pointer;
+  transition: transform 0.2s;
+}
+.course-card:hover { transform: translateY(-3px); }
+.course-card img {
+  width:100%;
+  height:100px;
+  border-radius:8px;
+  object-fit:cover;
+}
+.course-card .title { font-weight:600; margin-top:6px; }
+.course-card .teacher { font-size:12px; color:#555; }
+
+/* ===== CONVERSATION LIST ===== */
+.conversation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  /* header + search-bar + optional streak card + bottom nav */
+  height: calc(100vh - 60px - 50px - 80px - 60px); 
+  /* 60px header, 50px search, 80px streak card max, 60px bottom nav */
+}
+.conversation-item {
+  display:flex;
+  align-items:center;
+  padding:12px 16px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+  flex-wrap:wrap;
+}
+.conversation-item:hover { background:#f5f6f7; }
+.avatar { position:relative; margin-right:14px; }
+.avatar img { width:52px; height:52px; border-radius:50%; object-fit:cover; }
+.online-dot {
+  position:absolute;
+  bottom:-2px; right:-2px;
+  width:12px; height:12px;
+  background:#4caf50;
+  border:2px solid #fff;
+  border-radius:50%;
+}
+.conversation-info { flex:1; min-width:0; margin-right:10px; }
+.name { font-weight:600; font-size:16px; }
+.last-message {
+  font-size:14px; color:#555;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  margin-top:4px;
+}
+.last-message.unread { font-weight:bold; color:#000; }
+.meta {
+  text-align:right;
+  min-width:50px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  font-size:12px;
+}
+.unread-badge {
+  display:inline-block;
+  width:10px; height:10px;
+  background:#0084ff;
+  border-radius:50%;
+  margin-top:4px;
+}
+
+/* ===== STREAK CARD ===== */
+#streakCard {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+
+  background:linear-gradient(135deg, #0d6efd, #00c6ff);
+  color:#fff;
+
+  margin:40px 20px;
+  padding:28px 20px;
+  border-radius:18px;
+
+  box-shadow:0 10px 30px rgba(0,0,0,0.18);
+}
+
+#streakCard h2 {
+  font-size:20px;
+  font-weight:800;
+  margin:0;
+}
+
+#streakText {
+  font-size:15px;
+  margin-top:10px;
+  opacity:0.95;
+  max-width:280px;
+}
+
+#claimStreakBtn {
+  margin-top:18px;
+  background:#fff;
+  color:#0d6efd;
+
+  border:none;
+  padding:12px 26px;
+  border-radius:30px;
+
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#claimStreakBtn:hover {
+  transform:scale(1.05);
+  box-shadow:0 6px 15px rgba(0,0,0,0.2);
+}
+
+/* ===== NEW CHAT MODAL ===== */
+#newChatModal {
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:200;
+}
+#newChatModal .modal-content {
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:400px;
+  text-align:center;
+}
+#newChatModal input {
+  width:100%;
+  padding:10px;
+  margin-bottom:12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  outline:none;
+}
+#newChatModal button {
+  padding:10px 16px;
+  border:none;
+  background:#0084ff;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* ===== FLOATING BUTTON + BOTTOM NAV ===== */
+.new-chat-btn {
+  position:fixed;
+  bottom:80px;
+  right:20px;
+  background:#0084ff;
+  color:white;
+  border:none;
+  border-radius:50%;
+  width:56px; height:56px;
+  font-size:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 6px rgba(0,0,0,0.2);
+  cursor:pointer;
+}
+.bottom-nav {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:white;
+  display:flex;
+  justify-content:space-around;
+  padding:8px 0;
+  box-shadow:0 -3px 6px rgba(0,0,0,0.1);
+}
+.bottom-nav a {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-decoration:none;
+  color:#555;
+  font-size:11px;
+}
+.bottom-nav a span { font-size:24px; }
+.plus-button { font-size:28px !important; color:#6a0dad; }
+
+/* ===== MOBILE ===== */
+@media (max-width:600px){
+  #myCoursesGrid { grid-template-columns:1fr; }
+  .course-card img { height:140px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  Courses
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button id="filterUnreadBtn">Unread</button>
+    <button id="shareBtn">invite Friends</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <input id="searchInput" placeholder="Search teachers..." />
+  <button id="clearSearch">Clear</button>
+</div>
+<!-- ===== DAILY STREAK ===== -->
+<div id="streakCard" style="display:none;">
+  <div style="font-weight:700; font-size:16px;">🔥 Your Daily Streak</div>
+  <div id="streakText" style="font-size:14px; margin-top:6px; color:#333;">
+    You’re on a learning streak today.
+  </div>
+  <button id="claimStreakBtn">Claim today’s reward</button>
+</div>
+<!-- ===== LEARNED COURSES ===== -->
+<div id="myCoursesGrid">check under to see your messages with teachers</div>
+<!-- ===== CONVERSATION LIST ===== -->
+<ul class="conversation-list" id="conversationList">loading..</ul>
+<div id="chatList"></div>
+
+
+
+<button class="new-chat-btn" id="newChatBtn">AI</button>
+
+<div class="bottom-nav">
+  <a href="index.html" class="active">
+    <span class="material-icons-outlined">home</span>
+    Home
+  </a>
+  <a href="messages.html">
+    <span class="material-icons-outlined">chat_bubble_outline</span>
+    Learning
+  </a>
+  <a href="add.html">
+    <span class="material-icons plus-button">add</span>
+    Add
+  </a>
+  <a href="tokens.html"><span class="material-icons-outlined">diamond</span>Tokens</a>
+  <a href="profile.html">
+    <span class="material-icons-outlined">person</span>
+    Profile
+  </a>
+</div>
+
+<!-- ===== NEW CHAT MODAL ===== -->
+<div id="newChatModal">
+  <div class="modal-content">
+    <h3>Microswab AI Access</h3>
+    <p style="font-size:14px; color:#555; margin-bottom:14px;">
+      To access Microswab AI, you need to pay <b>50 tokens</b>.
+    </p>
+    <button id="payAiBtn">Pay 50 Tokens</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+import {
+  getFirestore, collection, query, where, onSnapshot,
+  doc, getDoc, updateDoc, setDoc, getDocs, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain: "vs-code-d4d6b.firebaseapp.com",
+  projectId: "vs-code-d4d6b",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+async function pushNotification(uid, message) {
+  const ref = doc(collection(db, "users", uid, "notifications"));
+  await setDoc(ref, {
+    message,
+    type: "streak",
+    createdAt: serverTimestamp(), // ✅ FIX
+    read: false
+  });
+}
+
+const list = document.getElementById("conversationList");
+const myCoursesGrid = document.getElementById("myCoursesGrid");
+const searchInput = document.getElementById("searchInput");
+const filterUnreadBtn = document.getElementById("filterUnreadBtn");
+const clearSearchBtn = document.getElementById("clearSearch");
+const newChatBtn = document.getElementById("newChatBtn");
+const newChatModal = document.getElementById("newChatModal");
+const payAiBtn = document.getElementById("payAiBtn");
+const streakCard = document.getElementById("streakCard");
+const claimStreakBtn = document.getElementById("claimStreakBtn");
+
+const AI_COST = 50;
+const STREAK_MILESTONES = {3:10,7:25,14:50,30:100};
+const DAILY_REWARD = 5;
+const STREAK_SAVE_COST = 10;
+const ONE_DAY = 1*60*60*1000;
+
+let cachedUsers = {};
+let allConvs = [];
+let showUnreadOnly = false;
+
+// ===== Helpers =====
+function timeAgo(ts){
+  if(!ts) return "";
+  const s = (Date.now() - ts.toDate())/1000;
+  if(s<60) return "Now";
+  if(s<3600) return Math.floor(s/60) + "m";
+  if(s<86400) return Math.floor(s/3600) + "h";
+  return ts.toDate().toLocaleDateString();
+}
+
+async function getUser(uid){
+  if(cachedUsers[uid]) return cachedUsers[uid];
+  const snap = await getDoc(doc(db,"users",uid));
+  cachedUsers[uid] = snap.exists()? snap.data() : null;
+  return cachedUsers[uid];
+}
+
+// ===== Render Learned Courses (Fast) =====
+async function loadLearnedCourses(uid){
+  const userSnap = await getDoc(doc(db,"users",uid));
+  if(!userSnap.exists()) return;
+  
+  const learnedSkills = userSnap.data().learnedSkills || [];
+  myCoursesGrid.innerHTML = "";
+  if(learnedSkills.length===0){
+    myCoursesGrid.innerHTML = "<div style='padding:20px;text-align:center;color:#777;'>You haven’t learned any skills yet. Start learning now!</div>";
+    return;
+  }
+
+  // Batch fetch all skill docs in parallel
+  const skillDocs = await Promise.all(learnedSkills.map(id=>getDoc(doc(db,"skills",id))));
+  
+  const fragment = document.createDocumentFragment();
+  skillDocs.forEach((snap,i)=>{
+    if(!snap.exists()) return;
+    const skill = snap.data();
+    const div = document.createElement("div");
+    div.className = "course-card";
+    div.innerHTML = `
+      <img src="${skill.fileURL || 'default-avatar.jpg'}">
+      <div class="title">${skill.title || 'Untitled Course'}</div>
+      <div class="teacher">By ${skill.posterName || 'Teacher'}</div>
+    `;
+    div.onclick = ()=>window.location.href=`teacherchat.html?skillId=${encodeURIComponent(learnedSkills[i])}`;
+    fragment.appendChild(div);
+  });
+  myCoursesGrid.appendChild(fragment);
+}
+
+// ===== Render Conversations (Fast) =====
+function renderConversations(){
+  list.innerHTML="";
+  const term = searchInput.value.toLowerCase();
+  const fragment = document.createDocumentFragment();
+
+  allConvs.forEach(c=>{
+    const other = c.participants.find(u=>u!==auth.currentUser.uid);
+    const u = cachedUsers[other];
+    if(!u) return;
+
+    const unread = auth.currentUser.uid===c.teacherId ? (c.unreadCountTeacher||0) : (c.unreadCountStudent||0);
+    const name = `${u.firstName||''} ${u.secondName||''}`;
+    if(showUnreadOnly && unread===0) return;
+    if(term && !name.toLowerCase().includes(term)) return;
+
+    const li = document.createElement("li");
+    li.className="conversation-item";
+    li.onclick = async ()=>{
+      const convRef = doc(db,"conversations",c.id);
+      if(auth.currentUser.uid===c.teacherId && unread>0) await updateDoc(convRef,{unreadCountTeacher:0});
+      if(auth.currentUser.uid===c.studentId && unread>0) await updateDoc(convRef,{unreadCountStudent:0});
+      sessionStorage.setItem("openedConvId",c.id);
+      location.href=`tech.html?convId=${c.id}&uid=${other}`;
+    };
+
+    li.innerHTML = `
+      <div class="avatar">
+        <img src="${u.photoURL || 'default-avatar.jpg'}">
+        ${u.isOnline?'<span class="online-dot"></span>':''}
+      </div>
+      <div class="conversation-info">
+        <div class="name">${name}</div>
+        <div class="last-message ${unread>0?'unread':''}">${c.lastMessage||''}</div>
+      </div>
+      <div class="meta">
+        <div class="timestamp">${timeAgo(c.lastMessageTime)}</div>
+        ${unread>0?'<span class="unread-badge"></span>':''}
+      </div>
+    `;
+    fragment.appendChild(li);
+  });
+
+  if(!fragment.hasChildNodes()){
+    list.innerHTML=`<div class="empty-state">${term?"No messages match your search.":"No messages yet."}</div>`;
+  } else list.appendChild(fragment);
+}
+
+// ===== Auth & Initial Load =====
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+
+  const userRef = doc(db,"users",user.uid);
+  const snap = await getDoc(userRef);
+  if(!snap.exists()) return;
+
+  const data = snap.data();
+  let streak = data.streak||0;
+  let lastActive = data.lastActive||0;
+  let tokens = data.tokens||0;
+  const now = Date.now();
+
+  // Handle streak reset or save
+  // Handle streak reset or save
+if (lastActive && now - lastActive > ONE_DAY * 2 && !data.missedStreakNotified) {
+
+  // 🔔 PUSH MISSED STREAK NOTIFICATION
+  await pushNotification(user.uid, "🔥 You missed today’s streak!");
+  await updateDoc(userRef, { missedStreakNotified: true });
+
+  if (tokens >= STREAK_SAVE_COST &&
+      confirm("⚠️ You missed a day!\nPay 10 tokens to save your streak?")) {
+    tokens -= STREAK_SAVE_COST;
+  } else {
+    streak = 0;
+  }
+}
+
+  // ===== DAILY STREAK (FINAL, FIXED) =====
+const lastClaim = data.lastStreakClaimTime || 0;
+
+// Hide by default
+streakCard.style.display = "none";
+
+// Show ONLY if 24 hours passed
+if (now - lastClaim >= ONE_DAY) {
+  streakCard.style.display = "flex";
+  if (streak > 0) {
+  streakCard.style.background =
+    "linear-gradient(135deg, #ff6a00, #ee0979)";
+}
+
+  const hoursLeft = Math.max(
+  0,
+  Math.floor((ONE_DAY - (now - lastClaim)) / (60 * 60 * 1000))
+);
+
+document.getElementById("streakText").innerHTML =
+  streak === 0
+    ? `🔥 Start your learning streak today.<br><b>Claim +${DAILY_REWARD} tokens</b> before midnight.`
+    : `⚠️ Day <b>${streak + 1}</b> streak active.<br>
+       You will <b>LOSE your ${streak}-day streak</b> if you don’t claim today.`;
+  claimStreakBtn.onclick = async () => {
+    claimStreakBtn.disabled = true;
+
+    streak += 1;
+    let reward = DAILY_REWARD;
+    if (STREAK_MILESTONES[streak]) reward += STREAK_MILESTONES[streak];
+
+    await updateDoc(userRef, {
+  tokens: tokens + reward,
+  streak: streak,
+  lastStreakClaimTime: now,
+  lastActive: now,
+  missedStreakNotified: false
+});
+
+    alert(`🔥 Streak Day ${streak}! You earned +${reward} tokens`);
+
+    // 🔥 HIDE COMPLETELY after claim
+    streakCard.style.display = "none";
+  };
+}
+
+// ===== PLUS BUTTON HOVER & CLICK ANIMATION =====
+newChatBtn.style.transition = "transform 0.2s, box-shadow 0.2s";
+newChatBtn.onmouseover = () => {
+  newChatBtn.style.transform = "scale(1.1)";
+  newChatBtn.style.boxShadow = "0 6px 10px rgba(0,0,0,0.3)";
+};
+newChatBtn.onmouseout = () => {
+  newChatBtn.style.transform = "scale(1)";
+  newChatBtn.style.boxShadow = "0 4px 6px rgba(0,0,0,0.2)";
+};
+newChatBtn.onmousedown = () => { newChatBtn.style.transform = "scale(0.95)"; };
+newChatBtn.onmouseup = () => { newChatBtn.style.transform = "scale(1.1)"; };
+
+  // Load courses fast
+  await loadLearnedCourses(user.uid);
+
+  // Load conversations
+  const q = query(collection(db,"conversations"), where("participants","array-contains",user.uid));
+  onSnapshot(q, async snap=>{
+    allConvs = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>(b.lastMessageTime?.toMillis()||0)-(a.lastMessageTime?.toMillis()||0));
+
+    // Preload all other users in parallel
+    const ids = new Set();
+    allConvs.forEach(c=>{
+      const other = c.participants.find(u=>u!==user.uid);
+      if(other) ids.add(other);
+    });
+    await Promise.all([...ids].map(id=>getUser(id)));
+
+    renderConversations();
+  });
+});
+
+// ===== Event Handlers =====
+searchInput.oninput = renderConversations;
+clearSearchBtn.onclick = ()=>{ searchInput.value=""; renderConversations(); };
+filterUnreadBtn.onclick = ()=>{ showUnreadOnly=!showUnreadOnly; renderConversations(); };
+
+// ===== AI Chat Button =====
+newChatBtn.onclick = async ()=>{
+  const user = auth.currentUser;
+  if(!user) return alert("Please log in again");
+  const snap = await getDoc(doc(db,"users",user.uid));
+  const data = snap.data();
+  if(data.aiUnlocked) return window.location.href="https://ai-engineer-bot--AZA000900.replit.app";
+
+  // Check tokens
+  if(data.tokens < AI_COST){
+    payAiBtn.disabled = true;
+    payAiBtn.innerText = `Need ${AI_COST} tokens`;
+    payAiBtn.style.background = "#ccc";
+    payAiBtn.style.cursor = "not-allowed";
+  } else {
+    payAiBtn.disabled = false;
+    payAiBtn.innerText = `Pay ${AI_COST} Tokens`;
+    payAiBtn.style.background = "#0084ff";
+    payAiBtn.style.cursor = "pointer";
+  }
+
+  newChatModal.style.display="flex";
+};
+payAiBtn.onclick = async ()=>{
+  const user = auth.currentUser;
+  if(!user) return alert("Please log in again");
+  const snap = await getDoc(doc(db,"users",user.uid));
+  const data = snap.data();
+  if(data.tokens<AI_COST) return alert("❌ Not enough tokens!");
+  await updateDoc(doc(db,"users",user.uid), { tokens: data.tokens-AI_COST, aiUnlocked:true });
+  alert("🎉 Microswab AI unlocked!");
+  newChatModal.style.display="none";
+  window.location.href="https://microswab-ai--gepejaff.replit.app/";
+};
+newChatModal.onclick = e=>{ if(e.target===newChatModal) newChatModal.style.display="none"; };
+// ===== SHARE MICROSABW LINK =====
+const shareBtn = document.getElementById("shareBtn");
+shareBtn.onclick = async () => {
+  const shareData = {
+    title: "Microswab - Learn Skills Fast",
+    text: "Check out Microswab, a platform to learn real skills from real teachers!",
+    url: "https://microswab.netlify.app"
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData); // Native share on mobile / supported browsers
+      console.log("Shared successfully");
+    } else {
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(shareData.url);
+      alert("Link copied to clipboard! Share it with your friends.");
+    }
+  } catch (err) {
+    console.error("Error sharing:", err);
+  }
+};
+
+</script>
+
+</body>
+</html>

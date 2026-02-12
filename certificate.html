@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Certificate — Microswab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f4f5f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .certificate-container {
+      background: #fff;
+      width: 90%;
+      max-width: 900px;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      text-align: center;
+      position: relative;
+      border: 8px solid #6a0dad;
+    }
+
+    .certificate-container::before, .certificate-container::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #6a0dad;
+    }
+
+    .certificate-container::before { top: -12px; left: -12px; }
+    .certificate-container::after { bottom: -12px; right: -12px; }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      margin: 0;
+      color: #6a0dad;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin: 10px 0 30px 0;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .recipient-name {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 20px 0;
+      color: #000;
+    }
+
+    .achievement {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .tokens-earned {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 30px;
+      color: #6a0dad;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .btn-home {
+      display: inline-block;
+      background: linear-gradient(135deg, #6a0dad, #8a2be2);
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-home:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .star {
+      color: #f5c518;
+      font-size: 28px;
+      margin: 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="certificate-container">
+    <h1>🎓 Microswab Learning Certificate 🎓</h1>
+    <h2>Certificate of Achievement</h2>
+
+    <div class="recipient-name" id="learnerName">Loading…</div>
+
+    <p class="achievement">
+        This certificate celebrates Kelly James for completing a skill on Microswab! Your dedication, curiosity, and courage to explore new knowledge have been inspiring. Every lesson you completed shows your commitment to grow, learn, and master your skills. Keep shining, keep improving, and remember that your hard work is not only unlocking new abilities but also shaping a brighter future. Share your achievement and inspire others—learning together makes Microswab stronger!
+          </p>
+
+    <div class="tokens-earned">You have earned <strong id="tokensEarned">100 tokens</strong> 🎉</div>
+
+    <div>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+      <span class="star">⭐</span>
+    </div>
+
+    <a href="home.html" class="btn-home">🏠 Back to Microswab</a>
+
+    <div class="footer">
+      Keep learning, keep growing. Your skills are your future.  
+      <br>Powered by Microswab • Learn fast • Teach real skills
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+      authDomain:"vs-code-d4d6b.firebaseapp.com",
+      projectId:"vs-code-d4d6b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const learnerNameElem = document.getElementById("learnerName");
+    const learnerNameElem2 = document.getElementById("learnerName2");
+    const tokensElem = document.getElementById("tokensEarned");
+
+    onAuthStateChanged(auth, async user => {
+      if(!user) return location.href = "login.html";
+
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if(snap.exists()){
+        const data = snap.data();
+        learnerNameElem.textContent = `${data.firstName || ""} ${data.secondName || ""}`.trim();
+        learnerNameElem2.textContent = learnerNameElem.textContent;
+        tokensElem.textContent = `+${data.tokens || 0} tokens`;
+      }
+    });
+  </script>
+</body>
+</html>

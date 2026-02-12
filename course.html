@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Learn Skill — Microswab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; }
+body { margin:0; font-family: Inter, sans-serif; background:#f0f2f5; }
+.header { background:#fff; padding:12px 16px; display:flex; align-items:center; border-bottom:1px solid #ddd; position:fixed; inset:0 0 auto 0; z-index:1000; }
+.header img { width:50px; height:50px; border-radius:50%; margin-right:12px; }
+.name { font-size:17px; font-weight:700; }
+.container { max-width:720px; margin:90px auto 60px; padding:0 16px; }
+.lesson-title { font-size:22px; font-weight:700; }
+.lesson-progress { font-size:13px; color:#64748b; margin-bottom:14px; }
+.lesson-box { background:#fff; padding:22px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.05); line-height:1.8; white-space:pre-wrap; }
+.lesson-box.locked { filter:blur(5px); pointer-events:none; }
+.next-btn { width:100%; margin-top:22px; padding:14px; background:#1877f2; color:#fff; border:none; border-radius:12px; font-weight:600; }
+#microswab-ai-btn { position:fixed; top:14px; right:14px; display:flex; gap:6px; padding:8px 12px; background:#6a0dad; color:#fff; border-radius:22px; font-size:13px; cursor:pointer; z-index:9999; }
+.payment-overlay, .reward-overlay { position:fixed; inset:0; background:rgba(2,6,23,.7); display:none; align-items:center; justify-content:center; z-index:99999; }
+.payment-box, .reward-box { background:#fff; width:90%; max-width:360px; padding:26px; border-radius:18px; text-align:center; }
+.pay-btn, .reward-ok-btn { width:100%; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg,#6a0dad,#8a2be2); color:#fff; font-weight:700; margin-top:10px; }
+.error { background:#fee2e2; color:#991b1b; padding:10px; border-radius:10px; font-size:13px; display:none; margin-bottom:10px; }
+.success { color:#16a34a; font-weight:700; display:none; margin-top:10px; }
+footer { text-align:center; font-size:13px; color:#64748b; padding:18px; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img id="teacherPic" src="default-avatar.jpg">
+  <div class="name" id="teacherName">Loading…</div>
+</div>
+
+<div id="microswab-ai-btn">
+  <span class="material-icons-outlined">smart_toy</span>
+  Ask Microswab AI
+</div>
+
+<div class="container">
+  <div class="lesson-title" id="lessonTitle"></div>
+  <div class="lesson-progress">Learning in progress</div>
+  <div class="lesson-box" id="lessonContent"></div>
+  <button class="next-btn" id="nextBtn" style="display:none;">Finish Course 🎉</button>
+</div>
+
+<!-- Payment Modal -->
+<div class="payment-overlay" id="paymentOverlay">
+  <div class="payment-box">
+    <h3>🔒 Continue Learning</h3>
+    <p>Pay <strong>30 tokens</strong> to continue</p>
+    <div class="error" id="paymentError"></div>
+    <button class="pay-btn" id="payBtn">Pay 30 Tokens</button>
+    <div class="success" id="paymentSuccess">🎉 Payment successful!</div>
+  </div>
+</div>
+
+<!-- Reward Modal -->
+<div class="reward-overlay" id="rewardOverlay">
+  <div class="reward-box">
+    <h3>🎉 Congratulations!</h3>
+    <p>You just finished this course and earned +10 tokens</p>
+    <button class="reward-ok-btn" id="rewardOkBtn">OK</button>
+  </div>
+</div>
+
+<footer>Learn fast • Teach real skills • Microswab</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, updateDoc,
+  increment, addDoc, collection, serverTimestamp, setDoc, getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+document.getElementById("microswab-ai-btn").onclick = () => {
+  // Option 1: redirect to AI page
+  window.location.href = "https://ai-engineer-bot--AZA000900.replit.app";
+};
+
+const app = initializeApp({
+  apiKey:"AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain:"vs-code-d4d6b.firebaseapp.com",
+  projectId:"vs-code-d4d6b"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const PAYMENT = 30;
+const REWARD = 10;
+const skillId = new URLSearchParams(location.search).get("skillId");
+
+const lessonBox = document.getElementById("lessonContent");
+const overlay = document.getElementById("paymentOverlay");
+const payBtn = document.getElementById("payBtn");
+const errorBox = document.getElementById("paymentError");
+const successBox = document.getElementById("paymentSuccess");
+const nextBtn = document.getElementById("nextBtn");
+
+const rewardOverlay = document.getElementById("rewardOverlay");
+const rewardOkBtn = document.getElementById("rewardOkBtn");
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href="login.html";
+
+  const skillSnap = await getDoc(doc(db,"skills",skillId));
+  if (!skillSnap.exists()) return alert("Skill not found");
+  const skill = skillSnap.data();
+
+  lessonBox.textContent = skill.fullCourse;
+  lessonTitle.textContent = skill.title;
+
+  const teacherSnap = await getDoc(doc(db,"users",skill.posterUserId));
+  if (teacherSnap.exists()) {
+    const t = teacherSnap.data();
+    teacherName.textContent = `${t.firstName||""} ${t.secondName||""}`.trim();
+    teacherPic.src = t.photoURL || "default-avatar.jpg";
+  }
+
+  const userRef = doc(db,"users",user.uid);
+
+  // Check if learner already completed this course
+  const completionSnap = await getDoc(doc(db,"users",user.uid,"completedCourses",skillId));
+  const alreadyCompleted = completionSnap.exists();
+
+  if (user.uid === skill.posterUserId) {
+    unlock(); // Teacher sees everything unlocked
+  } else {
+    if (alreadyCompleted) {
+      unlock();
+      nextBtn.style.display = "none";
+    } else {
+      lessonBox.classList.add("locked");
+      overlay.style.display = "flex";
+
+      payBtn.onclick = async () => {
+        errorBox.style.display = "none";
+        payBtn.disabled = true;
+        payBtn.textContent = "Processing payment... ⏳";
+        try {
+          const userSnap = await getDoc(userRef);
+          const teacherRef = doc(db,"users",skill.posterUserId);
+
+          if ((userSnap.data().tokens || 0) < PAYMENT) {
+            errorBox.textContent = "Not enough tokens.";
+            errorBox.style.display = "block";
+            payBtn.disabled = false;
+            payBtn.textContent = `Pay ${PAYMENT} Tokens`;
+            return;
+          }
+
+          await updateDoc(userRef,{ tokens: increment(-PAYMENT) });
+          await updateDoc(teacherRef,{ tokens: increment(PAYMENT) });
+
+          await addDoc(collection(db,"users",user.uid,"notifications"),{
+            message:`✅ You sent ${PAYMENT} tokens to the teacher`,
+            read:false,
+            createdAt:serverTimestamp()
+          });
+          await addDoc(collection(db,"users",skill.posterUserId,"notifications"),{
+            message:`🎉 A learner sent you ${PAYMENT} tokens`,
+            read:false,
+            createdAt:serverTimestamp()
+          });
+
+          successBox.style.display = "block";
+          payBtn.style.display = "none";
+          setTimeout(unlock, 1000);
+        } catch(err) {
+          console.error(err);
+          errorBox.textContent = "Payment failed. Please try again.";
+          errorBox.style.display = "block";
+          payBtn.disabled = false;
+          payBtn.textContent = `Pay ${PAYMENT} Tokens`;
+        }
+      };
+    }
+  }
+});
+
+nextBtn.onclick = () => { rewardOverlay.style.display = "flex"; };
+
+rewardOkBtn.onclick = async () => {
+  rewardOverlay.style.display = "none";
+
+  const user = auth.currentUser;
+  if (!user) return;
+  const userRef = doc(db,"users",user.uid);
+
+  // Reward tokens to learner
+  await updateDoc(userRef, { tokens: increment(REWARD) });
+
+  // Record course completion for learner
+  await setDoc(doc(db,"users",user.uid,"completedCourses",skillId), {
+    completedAt: serverTimestamp()
+  });
+
+  // Increment learner's learning progress by 5%, capped at 100%
+  const userSnap = await getDoc(userRef);
+  const currentProgress = userSnap.data().learningProgress || 0;
+  const newProgress = Math.min(currentProgress + 5, 100);
+  await updateDoc(userRef, { learningProgress: newProgress });
+
+  // ✅ Increment teacher's teaching progress by 5% per learner
+  const skillSnap = await getDoc(doc(db,"skills",skillId));
+  if (skillSnap.exists()) {
+    const teacherId = skillSnap.data().posterUserId;
+    const teacherRef = doc(db,"users",teacherId);
+
+    // Get current teacher progress
+    const teacherSnap = await getDoc(teacherRef);
+    const currentTeacherProgress = teacherSnap.data().teachingProgress || 0;
+
+    // Increase by 5%, capped at 100%
+    const newTeacherProgress = Math.min(currentTeacherProgress + 5, 100);
+    await updateDoc(teacherRef, { teachingProgress: newTeacherProgress });
+  }
+
+  nextBtn.style.display = "none";
+  alert(`✅ You received ${REWARD} tokens! Your learning progress is now ${newProgress}%. Teacher's progress is updated.`);
+};
+
+function unlock(){
+  overlay.style.display = "none";
+  lessonBox.classList.remove("locked");
+  nextBtn.style.display = "block";
+}
+</script>
+</body>
+</html>

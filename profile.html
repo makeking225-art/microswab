@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microswab Profile</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+<style>
+  body { margin:0; font-family:'Inter','Arial',sans-serif; background:#fefefe; color:#1c1c1c; padding-bottom:70px; }
+  :root {
+    --primary-color: #6a0dad;
+    --bg-light: #fff;
+    --bg-input: #f3f3f3;
+    --border-light: #eaeaea;
+    --text-muted: #888;
+    --radius-pill: 25px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #fafafa;
+  }
+
+  /* ===== Topbar ===== */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .topbar .logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  /* ===== Search Box ===== */
+  .topbar .search {
+    flex: 1;
+    margin-left: 12px;
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    position: relative;
+    transition: box-shadow 0.2s;
+  }
+
+  .topbar .search:focus-within {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .topbar .search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    padding: 6px 0;
+  }
+
+  .topbar .search span {
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ===== Search Results ===== */
+  .search-results {
+    position: absolute;
+    top: 46px;
+    left: 0;
+    right: 0;
+    background: var(--bg-light);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1001;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .search-result {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.15s;
+  }
+
+  .search-result:last-child {
+    border-bottom: none;
+  }
+
+  .search-result:hover {
+    background: #f9f9f9;
+  }
+
+  .search-result img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  /* ===== Mobile Friendly Adjustments ===== */
+  @media (max-width: 480px) {
+    .topbar {
+      padding: 10px 12px;
+    }
+    .topbar .logo {
+      font-size: 18px;
+    }
+    .topbar .search input {
+      font-size: 13px;
+    }
+    .search-result {
+      padding: 8px 12px;
+      gap: 10px;
+    }
+    .search-result img {
+      width: 35px;
+      height: 35px;
+    }
+  }
+  .profile-header { background:#fff; padding:14px 16px; border-bottom:1px solid #eaeaea; display:flex; flex-direction:column; }
+  .profile-top { display:flex; align-items:center; gap:16px; }
+  .avatar-container { position:relative; width:100px; height:100px; flex-shrink:0; cursor:pointer; }
+  .avatar-container img.avatar { width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid #6a0dad; transition:transform 0.2s; }
+  .avatar-container img.avatar:hover { transform:scale(1.05); }
+  .avatar-container .add-icon { position:absolute; bottom:0; right:0; background:#6a0dad; color:#fff; font-size:16px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid #fff; transition:transform 0.2s ease; }
+  .avatar-container:hover .add-icon { transform:scale(1.2); }
+
+  .profile-stats-inline { display:flex; gap:20px; flex:1; justify-content:flex-start; margin-left:16px; }
+  .profile-stats-inline .stat { text-align:center; }
+  .profile-stats-inline .stat .count { font-weight:700; font-size:16px; display:block; }
+  .profile-stats-inline .stat .label { font-size:12px; color:#555; display:block; }
+
+  .username { font-size:18px; font-weight:700; margin:12px 0 4px; text-align:left; }
+  .bio { font-size:13px; color:#555; margin-bottom:12px; line-height:1.4; word-break:break-word; }
+
+  .profile-buttons { display:flex; gap:8px; margin-bottom:12px; }
+  .profile-buttons button { flex:1; min-width:60px; padding:6px 8px; font-size:13px; font-weight:600; border-radius:20px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s; }
+  .follow-btn { background:#6a0dad; color:#fff; border:1px solid #6a0dad; }
+  .follow-btn.following { background:#fff; color:#6a0dad; border:1px solid #6a0dad; }
+  .follow-btn:hover { opacity:0.85; }
+  .message-btn { background:#fff; color:#6a0dad; border:1px solid #d1c4e9; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+  .message-btn:hover { background:#f7f7f7; }
+  .edit-btn { background:#6a0dad; color:#fff; border:1px solid #6a0dad; }
+  .edit-btn:hover { background:#fff; color:#6a0dad; }
+
+  .profile-dashboard { display:flex; justify-content:space-around; border-top:1px solid #eee; border-bottom:1px solid #eee; background:#fff; margin-bottom:6px; }
+  .dashboard-tab { flex:1; text-align:center; padding:6px 0; cursor:pointer; color:#888; }
+  .dashboard-tab.active { color:#6a0dad; border-bottom:3px solid #6a0dad; }
+  .dashboard-tab span { font-size:20px; }
+  /* ===== Profile video preview style ===== */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.video-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Play icon */
+.video-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 56px;
+  color: rgba(255,255,255,0.9);
+  pointer-events: none;
+}
+
+/* Views bottom-left */
+.video-views {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.post-date {
+  font-size: 14px;
+  color: #888;
+}
+/* ===== FACEBOOK-STYLE POSTS ===== */
+.post {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 15px auto;
+  max-width: 600px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: 0.3s;
+}
+.post:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+}
+.post-header img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+.username {
+  font-weight: bold;
+  color: #050505;
+  cursor: pointer;
+  font-size: 16px;
+  text-decoration: none;
+}
+.follow-btn {
+  margin-left: auto;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #1877f2;
+  background: #1877f2;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+.follow-btn.following {
+  background: white;
+  color: #1877f2;
+}
+
+.post-title {
+  padding: 0 12px 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #050505;
+}
+
+.post img.main {
+  width: 100%;
+  max-height: 1000px;
+  object-fit: cover;
+  border-top: 1px solid #eee;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  padding: 6px 0;
+}
+.post-actions div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.post-actions div:hover {
+  background: #f0f2f5;
+}
+.post-actions .like span,
+.post-actions .comment span,
+.post-actions .share span {
+  font-size: 18px;
+  vertical-align: middle;
+  color: #606770; /* Facebook grey */
+}
+.post-actions .like.liked span {
+  color: #1877f2; /* Facebook blue when liked */
+}
+
+.learn-skill {
+  padding: 10px;
+  text-align: center;
+}
+.learn-skill button {
+  width: 95%;
+  padding: 8px 0;
+  border-radius: 12px;
+  border: none;
+  background: #1877f2;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.learn-skill button:hover {
+  background: #145dbf;
+}
+
+.comment-section {
+  padding: 8px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.comment-input {
+  width: 95%;
+  padding: 8px 0;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  text-indent: 12px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+.comment-list {
+  margin-top: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+}
+.comment-item {
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.3;
+  display: flex;
+  align-items: flex-start;
+}
+.comment-item img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+}
+.comment-item div {
+  background: #f0f2f5;
+  border-radius: 12px;
+  padding: 6px 10px;
+  flex: 1;
+}
+.comment-actions {
+  font-size: 12px;
+  margin-top: 4px;
+  color: #555;
+  display: flex;
+  gap: 10px;
+}
+    /* ========= Bottom nav ========= */
+    .bottom-nav {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:white;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  padding:8px 0;
+  box-shadow:0 -3px 6px rgba(0,0,0,0.1);
+  z-index:1000;
+}
+.bottom-nav a {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-decoration:none;
+  color:#555;
+  font-size:11px;
+  flex:1;
+}
+.bottom-nav a span {
+  font-size:24px;
+}
+.bottom-nav a:hover,
+.bottom-nav a.active {
+  color:#6a0dad;
+}
+.plus-button {
+  font-size:28px !important;
+  color:#6a0dad;
+}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">Microswab</div>
+  <div class="search">
+    <input type="text" id="searchInput" placeholder="Search skills...">
+    <span class="material-icons-outlined" id="searchBtn">search</span>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<div id="profilePage">
+  <div class="profile-header">
+    <div class="profile-top">
+      <div class="avatar-container" id="avatarContainer">
+  <img id="profilePic" class="avatar" src="default-avatar.jpg" alt="Profile Picture">
+  <span class="add-icon" id="addIcon">➕</span>
+</div>
+      <div class="profile-stats-inline">
+        <div class="stat"><span class="count" id="postsCount">0</span><span class="label">Posts</span></div>
+        <div class="stat"><span class="count" id="followersCount">0</span><span class="label">Followers</span></div>
+        <div class="stat"><span class="count" id="followingCount">0</span><span class="label">Following</span></div>
+      </div>
+    </div>
+    <h2 class="username" id="username">User</h2>
+    <p class="bio" id="bio">Loading bio...</p>
+    <div class="profile-buttons">
+      <button class="follow-btn" id="followBtn">Follow</button>
+      <button class="message-btn" id="messageBtn">Message</button>
+      <button class="edit-btn" onclick="window.location.href='profile-setup.html'">Edit</button>
+    </div>
+    <div class="profile-dashboard">
+      <div class="dashboard-tab active" data-tab="posts"><span class="material-icons-outlined">grid_on</span></div>
+    </div>
+  </div>
+
+<div class="user-posts" id="postsGrid"></div>
+</div>
+
+<div class="bottom-nav">
+  <a href="index.html"><span class="material-icons-outlined">home</span>Home</a>
+  <a href="messages.html"><span class="material-icons-outlined">chat_bubble_outline</span>Messages</a>
+  <a href="add.html"><span class="material-icons plus-button">add</span>Add</a>
+  <a href="tokens.html"><span class="material-icons-outlined">diamond</span>Tokens</a>
+  <a href="profile.html"><span class="material-icons-outlined">person</span>Profile</a>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+const quizBtn = document.getElementById("quizBtn");
+const quizPayModal = document.getElementById("quizPayModal");
+const payQuizBtn = document.getElementById("payQuizBtn");
+
+const QUIZ_COST = 15;
+const QUIZ_ACCESS_TIME = 25 * 60 * 60 * 1000; // 25 hours
+
+quizBtn.onclick = async () => {
+  const user = auth.currentUser;
+  if (!user) return alert("Please log in again");
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return alert("User record not found");
+
+  const data = snap.data();
+  const now = Date.now();
+
+  // ✅ Check if quiz already unlocked
+  if (data.quizUnlockedAt && now - data.quizUnlockedAt < QUIZ_ACCESS_TIME) {
+    window.location.href = "quiz.html";
+    return;
+  }
+
+  // ❌ Need to pay
+  quizPayModal.style.display = "flex";
+};
+
+payQuizBtn.onclick = async () => {
+  const user = auth.currentUser;
+  if (!user) return alert("Please log in again");
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) return alert("User record not found");
+
+  const data = snap.data();
+  const tokens = data.tokens || 0;
+
+  if (tokens < QUIZ_COST) {
+    alert("❌ Sorry, your token balance is insufficient.");
+    return;
+  }
+
+  await updateDoc(userRef, {
+    tokens: tokens - QUIZ_COST,
+    quizUnlockedAt: Date.now()
+  });
+
+  alert("🎉 Payment successful! Quiz unlocked");
+  window.location.href = "quiz.html";
+};
+
+// Close modal when clicking outside
+quizPayModal.onclick = e => {
+  if (e.target === quizPayModal) quizPayModal.style.display = "none";
+};
+// ====== STEP 1: Fix old posts without likesArray ======
+async function fixOldLikes() {
+  const skillsSnap = await getDocs(collection(db, "skills"));
+  skillsSnap.docs.forEach(async skillDoc => {
+    const data = skillDoc.data();
+    if (!data.likesArray) {
+      await updateDoc(skillDoc.ref, { likesArray: [] });
+      console.log("Fixed likesArray for post:", skillDoc.id);
+    }
+  });
+}
+fixOldLikes(); // Run once
+// Helper to get a query parameter from URL
+function getQueryParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+  arrayUnion,
+  arrayRemove,
+  increment,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+function formatPostDate(timestamp) {
+  if (!timestamp || !timestamp.toDate) return "";
+
+  const date = timestamp.toDate();
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (seconds < 60) return "Just now";
+  if (seconds < 3600) return Math.floor(seconds / 60) + " minutes ago";
+  if (seconds < 86400) return Math.floor(seconds / 3600) + " hours ago";
+  if (seconds < 172800) return "Yesterday";
+  if (seconds < 604800) return Math.floor(seconds / 86400) + " days ago";
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+const firebaseConfig = {
+  apiKey:"AIzaSyBdF5IFp9MblVQ2GUvE2NC8TsgTpVuT7dM",
+  authDomain:"vs-code-d4d6b.firebaseapp.com",
+  projectId:"vs-code-d4d6b",
+  storageBucket:"vs-code-d4d6b.appspot.com",
+  messagingSenderId:"1012283563694",
+  appId:"1:1012283563694:web:f25cfd82e9f762f617d73f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const profilePic = document.getElementById("profilePic");
+const fileInput = document.getElementById("fileInput");
+const usernameEl = document.getElementById("username");
+const bioEl = document.getElementById("bio");
+const postsCountEl = document.getElementById("postsCount");
+const followersCountEl = document.getElementById("followersCount");
+const followingCountEl = document.getElementById("followingCount");
+const messageBtn = document.getElementById("messageBtn");
+const followBtn = document.getElementById("followBtn");
+const postsGrid = document.getElementById("postsGrid");
+
+let profileUserId = "";
+
+onAuthStateChanged(auth, async (user) => {
+  if(!user) return;
+  const urlUid = getQueryParam("uid"); // get uid from URL
+profileUserId = urlUid || user.uid;  // if no uid, use logged-in user
+
+  const userRef = doc(db, "users", profileUserId);
+  const addIcon = document.getElementById("addIcon");
+const avatarContainer = document.getElementById("avatarContainer");
+
+// Show the plus icon ONLY if viewing your own profile
+if (profileUserId !== auth.currentUser.uid) {
+  addIcon.style.display = "none";   // hide for other users
+  avatarContainer.onclick = null;    // remove click for non-owners
+}
+
+  // ===== Real-time profile info =====
+onSnapshot(userRef, snap=>{
+  if(!snap.exists()) return;
+  const data = snap.data();
+  usernameEl.textContent = (data.firstName||"User")+" "+(data.secondName||"");
+  bioEl.textContent = data.bio || "No bio yet.";
+  profilePic.src = data.photoURL || "default-avatar.jpg";
+
+  // ===== OFFICIAL + TEACHERS FOLLOWERS OVERRIDE =====
+const officialProfileId = "nAM7ztQpGHX5XMNaF0CccGxMEHR2";
+
+// Unique followers per teacher (stable & realistic)
+const teacherFollowersMap = {
+  "1v68ERboYlbJwVgswQQJnvnqlnS2": "9.8K",
+  "3jzoJ6Hi5xUx5a9sOuwSiL1F5bd2": "11.2K",
+  "7tD7jCjcOcho5xRI5hhLrNTqe3H3": "8.7K",
+  "DDjNC0wCuwe5QCRgwhECEfnYl723": "12.4K",
+  "Q8lqsIYnkAQWU9wjdcpfW0kCTs32": "10.1K",
+  "Uxvvv4BOhQcwDcBdeVDnOMXpxxF3": "7.9K",
+  "XDiMore8SyVYldXLvt4xm15YePG2": "14.3K",
+  "ZrAxMFD1qgSMmsZlAkrGfSEPq5q2": "9.4K",
+  "gb81ucyy49UsJAFdGTswVz34wHe2": "6.8K",
+  "r2zcu43GDUenL62CglQUdl0PIxt1": "11.7K"
+};
+
+let followersDisplayValue;
+
+if (profileUserId === officialProfileId) {
+  followersDisplayValue = "13.7K";
+} else if (teacherFollowersMap[profileUserId]) {
+  followersDisplayValue = teacherFollowersMap[profileUserId];
+} else {
+  followersDisplayValue = data.followers?.length || 0;
+}
+
+followersCountEl.textContent = followersDisplayValue;
+followingCountEl.textContent = data.following?.length || 0;
+  // ===== BUTTONS VISIBILITY BASED ON PROFILE =====
+  if(auth.currentUser.uid === profileUserId){
+    // Viewing own profile
+    followBtn.style.display = "none";
+    messageBtn.style.display = "none";
+    document.querySelector(".edit-btn").style.display = "inline-block";
+  } else {
+    // Viewing another user's profile
+    followBtn.style.display = "inline-block";
+    messageBtn.style.display = "inline-block";
+    document.querySelector(".edit-btn").style.display = "none";
+  }
+
+  // ===== FOLLOW BUTTON STATE =====
+  if(data.followers?.includes(auth.currentUser.uid)){
+    followBtn.classList.add("following");
+    followBtn.textContent = "Following";
+  } else {
+    followBtn.classList.remove("following");
+    followBtn.textContent = "Follow";
+  }
+});
+
+  // ===== Real-time user posts =====
+const postsQuery = query(collection(db, "skills"), where("posterUserId", "==", profileUserId));
+onSnapshot(postsQuery, snapshot => {
+  postsGrid.innerHTML = "";
+  postsCountEl.textContent = snapshot.docs.length;
+
+  // ✅ Show message if no posts
+  if (snapshot.docs.length === 0) {
+    const emptyMsg = document.createElement("div");
+    emptyMsg.style.padding = "20px";
+    emptyMsg.style.textAlign = "center";
+    emptyMsg.style.color = "#777";
+    emptyMsg.style.fontSize = "15px";
+    emptyMsg.textContent = "No skills posted yet. Start sharing your first skill!";
+    postsGrid.appendChild(emptyMsg);
+    return; // exit early
+  }
+
+  snapshot.docs.forEach(async skillDoc => {
+    const skill = skillDoc.data();
+    const skillId = skillDoc.id;
+
+    const post = document.createElement("div");
+    post.className = "post";
+    post.id = "post-" + skillId;
+      post.innerHTML = `
+  <div class="post-header">
+    <img src="default-avatar.jpg" alt="Profile" class="poster-avatar">
+    <a href="#" class="username">Loading...</a>
+    <!-- DATE GOES HERE -->
+    <span class="post-date">${formatPostDate(skill.createdAt)}</span>
+    <button class="follow-btn">Follow</button>
+    ${skill.posterUserId === auth.currentUser.uid 
+        ? `<span class="material-icons delete-menu" style="cursor:pointer;">more_vert</span>` 
+        : ""}
+  </div>
+
+  <div class="post-title">${skill.title || ""}</div>
+
+  ${skill.postType === "video" && skill.videoURL
+    ? `
+    <div class="video-wrapper" style="position:relative; cursor:pointer;">
+      <video 
+        class="main" 
+        src="${skill.videoURL}"        
+        muted 
+        playsinline 
+        preload="metadata"             
+        style="width:100%; border-radius:8px; object-fit:cover;"
+      ></video>
+
+      <span class="material-icons" style="
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%);
+        font-size:48px;
+        color:white;
+        text-shadow: 0 0 6px rgba(0,0,0,0.6);
+      ">play_circle_filled</span>
+
+      <div style="
+        position:absolute;
+        bottom:8px;
+        left:8px;
+        background:rgba(0,0,0,0.4);
+        color:#fff;
+        padding:2px 6px;
+        border-radius:12px;
+        font-size:12px;
+        display:flex;
+        align-items:center;
+        gap:2px;
+      ">
+        <span class="material-icons" style="font-size:14px;">visibility</span>
+        <span>${skill.views || 0}</span>
+      </div>
+    </div>
+    `
+    : skill.fileURL
+      ? `<img class="main" src="${skill.fileURL}" alt="skill-image">`
+      : ""
+}
+
+<div class="post-actions">
+  <div class="like"><span class="material-icons">thumb_up</span><span class="like-count">${skill.likes||0}</span></div>
+  <div class="comment"><span class="material-icons">chat_bubble_outline</span><span class="comment-count">${skill.comments?.length || 0}</span></div>
+  <div class="views"><span class="material-icons">visibility</span><span class="views-count">${skill.views||0}</span></div>
+  <div class="share"><span class="material-icons">share</span></div>
+</div>
+
+${skill.postType !== "video" 
+    ? `<div class="learn-skill"><button>Learn Skill</button></div>` 
+    : ""}
+
+<div class="comment-section">
+  <input class="comment-input" type="text" placeholder="Write a comment..." />
+  <div class="comment-list"></div>
+</div>
+`;
+      postsGrid.appendChild(post);
+      // 🎬 When clicking a video in profile, go to reels.html showing that video
+const videoWrapper = post.querySelector(".video-wrapper");
+if (videoWrapper) {
+  videoWrapper.addEventListener("click", () => {
+    window.location.href = `reels.html?videoId=${skillId}`;
+  });
+}
+      
+    // ===== DELETE POST (OWNER ONLY) =====
+const deleteMenu = post.querySelector(".delete-menu");
+
+if (deleteMenu) {
+  deleteMenu.addEventListener("click", async () => {
+    // ✅ Prevent non-owners from deleting
+    if(skill.posterUserId !== auth.currentUser.uid){
+      alert("You cannot delete this post!");
+      return;
+    }
+
+    const confirmDelete = confirm(
+      "Are you sure you want to permanently delete this post? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const skillRef = doc(db, "skills", skillId);
+
+      // 🔥 Delete all comments subcollection
+      const commentsSnap = await getDocs(collection(db, "skills", skillId, "comments"));
+      for (const c of commentsSnap.docs) {
+        await deleteDoc(c.ref);
+      }
+
+      // 🔥 Delete skill document
+      await deleteDoc(skillRef);
+
+      // 🔥 Remove from UI immediately
+      post.remove();
+
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Error deleting this post. Check console.");
+    }
+  });
+}
+      // --- Poster info ---
+      const posterSnap = await getDoc(doc(db,"users",skill.posterUserId));
+      if(posterSnap.exists()){
+        const poster = posterSnap.data();
+        const nameEl = post.querySelector(".username");
+        const imgEl = post.querySelector(".poster-avatar");
+        const followBtnPost = post.querySelector(".follow-btn");
+
+        nameEl.textContent = (poster.firstName||"") + (poster.secondName ? " " + poster.secondName : "");
+        imgEl.src = poster.photoURL || "default-avatar.jpg";
+        nameEl.href = `profile.html?uid=${skill.posterUserId}`;
+        imgEl.addEventListener("click", ()=> window.location.href=`profile.html?uid=${skill.posterUserId}`);
+
+        // Follow button on post
+        onSnapshot(userRef, snap=>{
+          const following = snap.data()?.following || [];
+          followBtnPost.classList.toggle("following", following.includes(skill.posterUserId));
+          followBtnPost.textContent = following.includes(skill.posterUserId) ? "Following" : "Follow";
+        });
+
+        followBtnPost.addEventListener("click", async ()=>{
+          const posterRef = doc(db,"users",skill.posterUserId);
+          const meSnap = await getDoc(userRef);
+          if(!meSnap.exists()) return;
+          const following = meSnap.data().following || [];
+          if(following.includes(skill.posterUserId)){
+            await updateDoc(userRef,{following: arrayRemove(skill.posterUserId)});
+            await updateDoc(posterRef,{followers: arrayRemove(profileUserId)});
+          } else {
+            await updateDoc(userRef,{following: arrayUnion(skill.posterUserId)});
+            await updateDoc(posterRef,{followers: arrayUnion(profileUserId)});
+          }
+        });
+      }
+
+      // --- Like button ---
+const likeBtn = post.querySelector(".like");
+const likeCount = post.querySelector(".like-count");
+
+// Ensure likesArray exists and is an array
+const likesArray = Array.isArray(skill.likesArray) ? skill.likesArray : [];
+
+// Set initial liked state for current user
+if(profileUserId && likesArray.includes(profileUserId)) {
+  likeBtn.classList.add("liked");
+}
+
+// Listen for real-time changes to likes
+onSnapshot(doc(db, "skills", skillId), snap => {
+  if(!snap.exists()) return;
+  const data = snap.data();
+
+  // Make sure likes is a number
+  const likesNumber = Number(data.likes) || 0;
+  likeCount.textContent = likesNumber;
+
+  // Update button state for current user
+  if(profileUserId && Array.isArray(data.likesArray) && data.likesArray.includes(profileUserId)){
+    likeBtn.classList.add("liked");
+  } else {
+    likeBtn.classList.remove("liked");
+  }
+});
+
+// Handle click
+likeBtn.addEventListener("click", async () => {
+  if(!profileUserId) { alert("Please log in to like."); return; }
+
+  const skillRef = doc(db, "skills", skillId);
+  const docSnap = await getDoc(skillRef);
+  if(!docSnap.exists()) return;
+
+  // Ensure likesArray exists
+  const likedBy = Array.isArray(docSnap.data().likesArray) ? docSnap.data().likesArray : [];
+
+  if(likedBy.includes(profileUserId)){
+    await updateDoc(skillRef, { likes: increment(-1), likesArray: arrayRemove(profileUserId) });
+  } else {
+    await updateDoc(skillRef, { likes: increment(1), likesArray: arrayUnion(profileUserId) });
+  }
+});
+// --- SHARE button ---
+const shareBtn = post.querySelector(".share");
+let shareCountSpan = shareBtn.querySelector("span.count");
+
+// If you don't have a <span class="count"></span> inside .share, create one
+if(!shareCountSpan){
+  shareCountSpan = document.createElement("span");
+  shareCountSpan.className = "count";
+  shareCountSpan.style.marginLeft = "4px";
+  shareBtn.appendChild(shareCountSpan);
+}
+
+// Real-time share count
+const skillRef = doc(db, "skills", skillId);
+onSnapshot(skillRef, snap => {
+  if(!snap.exists()) return;
+  const data = snap.data();
+  const shares = typeof data.shares === "number" ? data.shares : 0;
+  shareCountSpan.textContent = shares;
+});
+
+// Share logic
+shareBtn.addEventListener("click", async () => {
+  const shareUrl = `https://microswab.netlify.app`; // Always share main site
+  const text = `🔥 Check out this skill on Microswab! Learn and earn rewards.\nJoin now 👇`;
+
+  try {
+    if(navigator.share){
+      // Native share for mobile
+      await navigator.share({ title: skill.title || "Microswab", text, url: shareUrl });
+    } else {
+      // Fallback: copy link to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Link copied to clipboard — paste it anywhere to share.");
+    }
+
+    // Increment share count in Firestore
+    await updateDoc(skillRef, { shares: increment(1) });
+
+  } catch(e){
+    console.error("Share error:", e);
+  }
+});
+
+      // --- Comments section ---
+      const commentBtn = post.querySelector(".comment");
+      const commentInput = post.querySelector(".comment-input");
+      const commentList = post.querySelector(".comment-list");
+      const commentCountEl = post.querySelector(".comment-count");
+      const commentsCol = collection(db,"skills",skillId,"comments");
+
+      // Show/hide comments on click
+      commentBtn.addEventListener("click", ()=>{
+        commentList.parentElement.style.display = commentList.parentElement.style.display==="flex"?"none":"flex";
+      });
+
+      // Real-time comments
+      onSnapshot(commentsCol, snapshotComments=>{
+        if(commentList.parentElement.style.display==="none") return;
+        commentList.innerHTML="";
+        commentCountEl.textContent = snapshotComments.size;
+        snapshotComments.docs.forEach(async cSnap=>{
+          const c = cSnap.data();
+          let cName = "Unknown", cPhoto="default-avatar.jpg";
+          try{
+            const uSnap = await getDoc(doc(db,"users",c.userId));
+            if(uSnap.exists()){
+              const u = uSnap.data();
+              cName = (u.firstName||"") + (u.secondName? " "+u.secondName:"");
+              cPhoto = u.photoURL || "default-avatar.jpg";
+            }
+          } catch(e){ console.error(e); }
+          const commentEl = document.createElement("div");
+          commentEl.className="comment-item";
+          commentEl.innerHTML = `<img src="${cPhoto}" /><div><strong>${cName}</strong> <span>${c.text}</span></div>`;
+          commentList.appendChild(commentEl);
+        });
+      });
+
+      // Add new comment
+      commentInput.addEventListener("keypress", async e=>{
+        if(e.key==="Enter" && commentInput.value.trim()!==""){
+          const text = commentInput.value.trim();
+          const commentRef = doc(collection(db,"skills",skillId,"comments"));
+          await updateDoc(doc(db,"skills",skillId),{
+            comments: arrayUnion({userId: profileUserId,text,timestamp:new Date()})
+          });
+          await setDoc(commentRef,{userId: profileUserId,text,timestamp:new Date()});
+          commentInput.value="";
+        }
+      });
+
+      // --- Learn Skill button ---
+      post.querySelector(".learn-skill button").addEventListener("click", ()=>{
+        if(!skill.posterUserId){ alert("No teacher assigned!"); return; }
+        window.location.href=`teacherchat.html?uid=${encodeURIComponent(skill.posterUserId)}`;
+      });
+
+      // --- Views increment ---
+      (async()=>{
+        try{
+          const skillRef = doc(db,"skills",skillId);
+          if(!skill.viewsArray || !skill.viewsArray.includes(profileUserId)){
+            await updateDoc(skillRef,{views: increment(1), viewsArray: arrayUnion(profileUserId)});
+            const prev = parseInt(post.querySelector('.views-count').textContent||"0",10);
+            post.querySelector('.views-count').textContent = prev+1;
+          }
+        }catch(e){console.error(e);}
+      })();
+
+    }); // end snapshot.docs.forEach
+  }); // end onSnapshot posts
+
+  // ===== Main follow & message & avatar =====
+  followBtn.addEventListener("click", async ()=>{
+    const meSnap = await getDoc(userRef);
+    const following = meSnap.data().following || [];
+    if(following.includes(profileUserId)){
+      await updateDoc(userRef,{following: arrayRemove(profileUserId)});
+    } else {
+      await updateDoc(userRef,{following: arrayUnion(profileUserId)});
+    }
+  });
+
+  messageBtn.addEventListener("click", ()=> window.location.href=`tech.html?uid=${encodeURIComponent(profileUserId)}`);
+
+  fileInput.addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e=> profilePic.src = e.target.result;
+    reader.readAsDataURL(file);
+  });
+
+});
+</script>
+<div id="quizButtonContainer" style="
+    position:fixed;
+    bottom:80px; /* slightly above Messenger Plus button */
+    right:20px;
+    z-index:1000;
+">
+    <button id="quizBtn" style="
+        background:#0084ff;
+        color:white;
+        border:none;
+        padding:14px 18px;
+        border-radius:50px;
+        font-size:18px;
+        font-weight:bold;
+        box-shadow:0 4px 8px rgba(0,0,0,0.2);
+        cursor:pointer;
+    ">
+        Quiz 🎯
+    </button>
+</div>
+<!-- Quiz Payment Modal -->
+<div id="quizPayModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:2000;
+  justify-content:center;
+  align-items:center;
+">
+  <div style="
+    background:#fff;
+    padding:20px;
+    border-radius:14px;
+    width:90%;
+    max-width:360px;
+    text-align:center;
+  ">
+    <h3>🎯 Microswab Quiz Access</h3>
+    <p style="font-size:14px; color:#555; margin-top:6px;">
+      To access Microswab quizzes, you need to pay <b>15 tokens</b>.
+    </p>
+
+    <button id="payQuizBtn" style="
+      margin-top:14px;
+      background:#0084ff;
+      color:white;
+      border:none;
+      padding:10px 18px;
+      border-radius:22px;
+      font-size:16px;
+      cursor:pointer;
+    ">
+      Pay 15 Tokens
+    </button>
+  </div>
+</div>
+</script>
+</body>
+</html>
