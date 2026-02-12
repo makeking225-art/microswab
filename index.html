@@ -355,7 +355,11 @@
 
   <!-- TOPBAR: Microswab + search -->
 <!-- TOPBAR -->
-         <div class="logo">Microswab</div>
+         <div class="logo">Microswab</div> <!-- SIGN UP BUTTON -->
+  <a href="signup.html" id="topSignupBtn" class="signup-btn">
+    Sign Up
+  </a>
+
   <div class="topbar">
     <div class="groups-icon" onclick="location.href='group.html'"> 
   <span></span>
@@ -386,15 +390,18 @@
         ">
   </span>
 </div>
-
   <!-- REELS ICON -->
   <a href="reels.html" id="videoBtn" style="position:relative;">
-  <span class="material-icons-outlined">video_library</span>    <div class="nav">
-    <a href="#" id="topSignupBtn" class="signup-btn">Sign Up</a>
-  </div>  <div class="token-badge" id="tokenBadge" style="display:none;">
-  <span class="material-icons-outlined" style="font-size:18px;">diamond</span>
-  <span id="homeTokenBalance">0</span>
-</div>
+  <span class="material-icons-outlined">video_library</span>
+   <span id="videoDot" class="video-dot"></span>
+  </a>
+ 
+  <!-- TOKEN BADGE (Hidden by default) -->
+  <div class="token-badge" id="tokenBadge">
+    <span class="material-icons-outlined token-icon">diamond</span>
+    <span id="homeTokenBalance">0</span>
+  </div>
+
   <span id="videoDot"
     style="
       position:absolute;
@@ -416,8 +423,12 @@
   <button class="category-btn" data-category="Entrepreneur">Entrepreneur</button>
   <button class="category-btn" data-category="freelancing">Freelancing</button>
   <button class="category-btn" data-category="marketing">Marketing</button>
-  <button class="category-btn" data-category="ai">AI</button>
   <button class="category-btn" data-category="design">Design</button>
+   <button class="category-btn" data-category="Apps ">Apps</button>
+   <button class="category-btn" data-category="Investor ">Investor </button>
+   <button class="category-btn" data-category="Data Analysis">Data Analysis</button>
+</div>
+
 </div>
   <!-- STORIES (bar) -->
   <div class="stories-wrapper">
@@ -430,7 +441,13 @@
         <div class="plus">+</div> 
         <div class="story-text">Add Story</div>
       </div>
-       
+      <!-- 10-second signup prompt for new users -->
+<div id="signupPrompt" class="signup-prompt" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:999;">
+  <div class="signup-prompt-content" style="background:#fff;padding:30px;border-radius:15px;text-align:center;max-width:300px;">
+    <h1 style="font-size:18px;font-weight:bold;margin-bottom:20px;">🚀 To continue using Microswab, you need to sign up!</h1>
+    <button id="promptSignupBtn" style="padding:10px 20px;font-size:16px;font-weight:bold;border:none;border-radius:8px;background:#4CAF50;color:white;cursor:pointer;">Sign Up</button>
+  </div>
+</div>
       <!-- dynamic stories appended here -->
     </div>
   </div>
@@ -682,9 +699,15 @@
   gap: 10px;
   padding: 10px;
   background: #fff;
-  position: sticky;
-  top: 60px;
-  z-index: 100;
+  position: relative; /* changed from sticky */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .category-btn {
@@ -707,30 +730,32 @@
   color: #fff;
 }
 .signup-btn {
-  background: #4CAF50;
-  color: #fff;
-  padding: 10px 18px;
-  border-radius: 6px;
+  background: #1877f2;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
   text-decoration: none;
-  font-weight: 500;
-  transition: 0.3s;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.signup-btn:hover {
-  background: #45a049;
-}
 .token-badge {
-  display: flex;
+  display: none; /* hidden by default */
   align-items: center;
-  gap: 4px;
-  background: linear-gradient(135deg, #b19bdd, #a98dbb);
-  color: white;
-  padding: 6px 10px;
+  gap: 3px;
+  background: rgba(99, 67, 67, 0.1);
+  padding: 5px 10px;
   border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
 }
+
+.token-icon {
+  font-size: 15px;
+}
+
+
 </style>
 
 <script>
@@ -876,6 +901,7 @@ const MICROSWAB_AI_UID = "nAM7ztQpGHX5XMNaF0CccGxMEHR2";
   let currentStoryIndex = 0;
   let viewerTimer = null;
   const STORY_DURATION_MS = 5000; // 5s per story default
+
 
   // Minimal escape helper for safe insertion
   function escapeHtml(s){ return String(s || '').replace(/[&<>"'`]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;', '`':'&#96;'}[c])); }
@@ -1515,29 +1541,6 @@ document.addEventListener("DOMContentLoaded", () => {
 </style>
 
 <script>
-const modal = document.getElementById("signupModal");
-const signupBtn = document.getElementById("signupBtn");
-
-// Function to check signup
-function checkSignup(e) {
-  if (!localStorage.getItem("microswabSignedUp")) {
-    e.preventDefault();
-    modal.style.display = "flex";
-  }
-}
-
-// Attach to ALL buttons
-document.querySelectorAll("button").forEach(btn => {
-  btn.addEventListener("click", checkSignup);
-});
-
-// When user clicks Sign Up
-signupBtn.addEventListener("click", function() {
-  localStorage.setItem("microswabSignedUp", "true");
-  window.location.href = "home.html";
-});
-</script>
-<script>
 document.addEventListener("DOMContentLoaded", function() {
 
   const categoryButtons = document.querySelectorAll(".category-btn");
@@ -1567,25 +1570,48 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 <script>
-// Get the button
-const topSignupBtn = document.getElementById("topSignupBtn");
-
-// Check if user has signed up before
-const hasSignedUp = localStorage.getItem("microswabSignedUp");
-
-// Show button only if user hasn't signed up
-if (!hasSignedUp) {
-  topSignupBtn.style.display = "inline-block";
-} else {
-  topSignupBtn.style.display = "none";
+// Helper to check if user is signed up
+// Helper
+function isLoggedIn() {
+  return localStorage.getItem("microswabSignedUp") === "true";
 }
 
-// When user clicks the button
-topSignupBtn.addEventListener("click", function(e) {
-  e.preventDefault();
-  // Mark as signed up (simulate signup for demo)
+// Elements
+const topSignupBtn = document.getElementById("topSignupBtn");
+const tokenBadge = document.getElementById("tokenBadge");
+const signupPrompt = document.getElementById("signupPrompt");
+const promptSignupBtn = document.getElementById("promptSignupBtn");
+
+// Show/hide top signup button & token badge
+if (isLoggedIn()) {
+  topSignupBtn.style.display = "none";
+  tokenBadge.style.display = "flex";
+} else {
+  topSignupBtn.style.display = "inline-block";
+  tokenBadge.style.display = "none";
+}
+
+// Top signup click
+topSignupBtn.addEventListener("click", () => {
   localStorage.setItem("microswabSignedUp", "true");
-  // Redirect to home.html
+  topSignupBtn.style.display = "none";
+  tokenBadge.style.display = "flex";
+  window.location.href = "home.html";
+});
+
+// 10s signup prompt for new users
+if (!isLoggedIn()) {
+  setTimeout(() => {
+    signupPrompt.style.display = "flex";
+  }, 10000);
+}
+
+// Prompt signup button click
+promptSignupBtn.addEventListener("click", () => {
+  localStorage.setItem("microswabSignedUp", "true");
+  signupPrompt.style.display = "none";
+  topSignupBtn.style.display = "none";
+  tokenBadge.style.display = "flex";
   window.location.href = "home.html";
 });
 </script>
