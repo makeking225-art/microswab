@@ -337,18 +337,18 @@ auth.onAuthStateChanged(async user => {
 
   // Create user document if it doesn't exist  
   if (!snap.exists()) {  
-    await setDoc(userRef, {  
-      tokens: 0,  
-      aiPaidUntil: 0,  
-      createdAt: Date.now(),
-      learningProgress: 0,
-      teachingProgress: 0,
-      skillsLearned: 0,
-      skillsTaught: 0,
-      learningCompleted: false,
-      teachingCompleted: false
-    });  
-  }  
+  await setDoc(userRef, {  
+    tokens: 50,  // <-- give new users 50 tokens
+    aiPaidUntil: 0,  
+    createdAt: Date.now(),
+    learningProgress: 0,
+    teachingProgress: 0,
+    skillsLearned: 0,
+    skillsTaught: 0,
+    learningCompleted: false,
+    teachingCompleted: false
+  });  
+} 
   loadTokens();  
 });  
 
