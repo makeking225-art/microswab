@@ -244,7 +244,7 @@ const auth = getAuth(app);
 // ✅ Skip button
 const skipBtn = document.getElementById("skipProfile");
 skipBtn.addEventListener("click", () => {
-  window.location.href = "homepage.html";
+  window.location.href = "index.html";
 });
 
 // Step Logic
@@ -377,7 +377,7 @@ window.saveProfile = async () => {
     
         document.getElementById("loadingAnimation").style.display = "none";
         alert("Profile saved successfully!");
-        window.location.href = "homepage.html";
+        window.location.href = "index.html";
       } catch (error) {
         console.error("Profile save error:", error);
         alert("Error saving profile: " + error.message);
