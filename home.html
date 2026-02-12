@@ -249,7 +249,7 @@ onAuthStateChanged(auth, async (user) => {
   const snap = await getDoc(userRef);
 
   if (snap.exists() && snap.data().profileCompleted === true) {
-    window.location.replace("home.html");
+    window.location.replace("index.html");
   } else {
     window.location.replace("profile-setup.html");
   }
